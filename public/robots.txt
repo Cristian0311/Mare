@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /mi-pedido
+Disallow: /pedido
+Disallow: /pedido-completado
+Disallow: /favoritos
+Disallow: /offline.html
+
+Sitemap: https://mare-a8w2.onrender.com/sitemap.xml

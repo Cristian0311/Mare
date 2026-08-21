@@ -1,0 +1,27 @@
+{
+  "name": "MARÉ - Todo lo que buscas",
+  "short_name": "MARÉ",
+  "description": "Tu tienda oficial MARÉ. Encuentra ofertas, categorías y los mejores productos.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F7F8",
+  "theme_color": "#0B1320",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

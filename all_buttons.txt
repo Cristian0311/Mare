@@ -1,0 +1,38 @@
+src/pages/OrderSuccess.tsx:121:          <Button 
+src/pages/Cart.tsx:102:          <Button 
+src/pages/Cart.tsx:380:              <Button 
+src/pages/Cart.tsx:402:          <Button 
+src/pages/Cart.tsx:427:            <Button 
+src/pages/Cart.tsx:435:            <Button 
+src/pages/Categories.tsx:61:                    <Button variant="ghost" size="sm" className="text-[10px] font-black text-gray-400 hover:text-mare-green tracking-widest uppercase p-0">
+src/pages/Checkout.tsx:256:                <Button variant="primary" fullWidth onClick={handleReview} className="h-14 rounded-2xl font-black tracking-widest text-[11px] shadow-lg shadow-mare-green/20 gap-2">
+src/pages/Collection.tsx:84:              <Button variant="primary">Volver al inicio</Button>
+src/pages/Collection.tsx:160:                <Button onClick={() => setFilterOptions({})} variant="outline">
+src/pages/Favorites.tsx:115:          <Button variant="primary" size="md" className="rounded-xl px-8 font-black text-[10px] tracking-widest gap-2 h-12 shadow-lg shadow-mare-green/20">
+src/pages/Favorites.tsx:141:              <Button 
+src/pages/Favorites.tsx:151:              <Button 
+src/pages/Favorites.tsx:161:            <Button 
+src/pages/Favorites.tsx:261:              <Button onClick={() => setFilterOptions({})} variant="outline">
+src/pages/Favorites.tsx:279:                <Button variant="outline" className="border-white/10 text-white hover:bg-white/5 rounded-xl font-black text-[10px] tracking-widest px-8">
+src/pages/ProductDetail.tsx:141:        <Button onClick={() => navigate('/')} variant="primary" className="rounded-xl px-8 font-black text-[10px] tracking-widest h-12">
+src/pages/ProductDetail.tsx:506:            <Button 
+src/pages/ProductDetail.tsx:532:                <Button 
+src/pages/ProductDetail.tsx:539:                <Button 
+src/pages/ProductDetail.tsx:667:          <Button 
+src/pages/CategoryDetail.tsx:126:              <Button variant="primary">Volver a la tienda</Button>
+src/pages/CategoryDetail.tsx:279:                    <Button variant="outline" size="sm">Explorar otras categorías</Button>
+src/pages/CategoryDetail.tsx:295:                  <Button onClick={() => setFilterOptions({ categoryId: category.id, subcategoryId: subcategory?.id })} variant="outline" size="sm">
+src/pages/Home.tsx:122:              <Button 
+src/pages/Home.tsx:178:              <Button variant="ghost" className="text-[9px] md:text-[10px] font-black text-gray-400 hover:text-mare-green tracking-widest uppercase px-2">
+src/pages/Home.tsx:221:                <Button variant="ghost" className="text-[9px] md:text-[10px] font-black text-gray-400 hover:text-mare-green tracking-widest uppercase px-2">
+src/pages/Home.tsx:254:          <Button 
+src/pages/Home.tsx:338:          <Button 
+src/pages/Search.tsx:139:                  <Button onClick={() => setFilterOptions({ searchQuery: query })} variant="outline">
+src/pages/Search.tsx:158:                  <Button onClick={() => navigate('/categorias')} variant="outline">
+src/pages/Search.tsx:161:                  <Button onClick={() => navigate('/')} variant="primary">
+src/components/ui/FilterSidebar.tsx:269:          <Button 
+src/components/ui/FilterSidebar.tsx:276:          <Button variant="primary" className="flex-1" onClick={onClose}>
+src/components/ui/ProductCard.tsx:224:            <Button 
+src/components/ui/InstallPrompt.tsx:74:              <Button onClick={handleInstall} className="w-full text-xs h-8 flex items-center justify-center gap-2">
+src/components/layout/Header.tsx:85:            <Button 
+src/components/checkout/OrderSummary.tsx:56:      <Button 

@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --color-mare-green: #0D7A73;
+  --color-mare-turquoise: #19B5A8;
+  --color-mare-navy: #0B1320;
+  --color-mare-blue: #0B1320;
+  --color-mare-gold: #F2C75B;
+  --color-mare-bg: #F5F7F8;
+  --color-mare-white: #FFFFFF;
+}
+
+body {
+  background-color: var(--color-mare-bg);
+  color: var(--color-mare-navy);
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Global focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--color-mare-turquoise);
+  outline-offset: 2px;
+}
+
+/* Hide scrollbar for horizontal scrolling elements */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

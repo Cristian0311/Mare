@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MARÉ - Sin Conexión</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #F5F7F8;
+      color: #0B1320;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+    .container {
+      padding: 24px;
+      max-width: 400px;
+    }
+    svg {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    p {
+      font-size: 14px;
+      color: #6B7280;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+    button {
+      background-color: #0D7A73;
+      color: white;
+      border: none;
+      border-radius: 9999px;
+      padding: 14px 28px;
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:active {
+      background-color: #0B615B;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#0D7A73" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 2l20 20"/>
+      <path d="M8.5 8.5A5 5 0 0115 15"/>
+      <path d="M5 5a10 10 0 0114 14"/>
+    </svg>
+    <h1>Sin conexión</h1>
+    <p>Comprueba tu conexión a Internet e inténtalo nuevamente para acceder al catálogo actualizado de MARÉ.</p>
+    <button onclick="window.location.reload()">Reintentar</button>
+  </div>
+</body>
+</html>

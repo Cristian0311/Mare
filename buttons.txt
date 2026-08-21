@@ -1,0 +1,11 @@
+7:import { Button } from '../components/ui/Button';
+141:        <Button onClick={() => navigate('/')} variant="primary" className="rounded-xl px-8 font-black text-[10px] tracking-widest h-12">
+143:        </Button>
+506:            <Button 
+528:            </Button>
+532:                <Button 
+538:                </Button>
+539:                <Button 
+545:                </Button>
+667:          <Button 
+674:          </Button>
