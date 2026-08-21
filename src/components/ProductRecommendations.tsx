@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, ShoppingCart, Tag, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { RecommendedItem, RecommendationType } from '../types/recommendation';

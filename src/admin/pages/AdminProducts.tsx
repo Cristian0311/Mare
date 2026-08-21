@@ -6,7 +6,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { Modal } from '../../components/ui/Modal';
 import { ProductForm } from '../components/ProductForm';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);

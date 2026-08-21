@@ -84,21 +84,34 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
 
 // Quitar el loader inicial una vez que React está listo
 const removeInitialLoader = () => {
+  if (typeof window === 'undefined') return;
   const loader = document.querySelector('.initial-loader');
   if (loader) {
+    console.log('MARÉ: Desvaneciendo cargador inicial...');
     loader.classList.add('fade-out');
     setTimeout(() => {
-      loader.remove();
-    }, 500);
+      if (loader.parentNode) {
+        loader.remove();
+        console.log('MARÉ: Aplicación lista.');
+      }
+    }, 800);
   }
 };
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <HelmetProvider>
-      <App />
-    </HelmetProvider>
-  </StrictMode>,
-);
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  const root = createRoot(rootElement);
+  root.render(
+    <StrictMode>
+      <HelmetProvider>
+        <App />
+      </HelmetProvider>
+    </StrictMode>,
+  );
+  
+  // Usar requestAnimationFrame para asegurar que el primer render ocurra antes de quitar el loader
+  requestAnimationFrame(() => {
+    setTimeout(removeInitialLoader, 500);
+  });
+}
 
-removeInitialLoader();

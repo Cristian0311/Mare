@@ -122,7 +122,7 @@ export function getBundlePricing(bundle: any, isWholesale: boolean = false): Pri
   }, 0);
 
   let finalPrice = individualTotal;
-  let originalPrice = individualTotal;
+  const originalPrice = individualTotal;
 
   if (bundle.price_type === 'fixed') {
     finalPrice = isWholesale && bundle.price_wholesale 

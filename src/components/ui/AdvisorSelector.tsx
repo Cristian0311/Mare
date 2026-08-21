@@ -3,7 +3,7 @@ import { Advisor } from '../../types';
 import { advisorsService } from '../../services/advisors';
 import { Check, User, Info, MessageCircle } from 'lucide-react';
 import { cn } from '../../utils/cn';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 interface AdvisorSelectorProps {
   onSelect: (advisor: Advisor) => void;

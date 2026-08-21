@@ -464,7 +464,7 @@ export class IntelligenceService {
    * Inventory Valuations
    */
   private calculateInventoryMetrics(allProducts: any[], productPerformance: ProductBIPerformance[]): InventoryBIMetrics {
-    let totalItemsCount = allProducts.length;
+    const totalItemsCount = allProducts.length;
     let totalUnitsInStock = 0;
     let outOfStockCount = 0;
     let lowStockCount = 0;

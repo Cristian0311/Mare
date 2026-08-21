@@ -84,8 +84,8 @@ export function generateWhatsAppMessage(
     message += `----------\n`;
 
     items.forEach((item, index) => {
-      let isWholesale = !!(item.isWholesale && item.ventaMayorista);
-      let isBundle = item.isBundle;
+      const isWholesale = !!(item.isWholesale && item.ventaMayorista);
+      const isBundle = item.isBundle;
 
       const pricing = isBundle && item.bundle 
         ? getBundlePricing(item.bundle, isWholesale)

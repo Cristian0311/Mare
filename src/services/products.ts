@@ -4,6 +4,10 @@ import { products as defaultProducts } from '../data/products';
 
 const PRODUCTS_STORAGE_KEY = 'mare_admin_products';
 
+const isUUID = (val: string): boolean => {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+};
+
 class ProductService {
   private localProducts: Product[];
 
@@ -17,31 +21,33 @@ class ProductService {
 
   private loadLocalProducts(): Product[] {
     try {
-      const saved = localStorage.getItem(PRODUCTS_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        let mutated = false;
-        const enhanced = parsed.map((p: any) => {
-          if (p.id.startsWith("PROD-") && (p.nombre.includes("Demostración") || p.imagenes?.[0]?.includes("placehold.co"))) {
-            const defaultProd = defaultProducts.find(dp => dp.id === p.id);
-            if (defaultProd) {
-              mutated = true;
-              return {
-                ...p,
-                nombre: defaultProd.nombre,
-                slug: defaultProd.slug,
-                imagenes: defaultProd.imagenes,
-                descripcionCorta: defaultProd.descripcionCorta,
-                descripcionCompleta: defaultProd.descripcionCompleta
-              };
+      if (typeof localStorage !== 'undefined') {
+        const saved = localStorage.getItem(PRODUCTS_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          let mutated = false;
+          const enhanced = parsed.map((p: any) => {
+            if (p.id.startsWith("PROD-") && (p.nombre.includes("Demostración") || p.imagenes?.[0]?.includes("placehold.co"))) {
+              const defaultProd = defaultProducts.find(dp => dp.id === p.id);
+              if (defaultProd) {
+                mutated = true;
+                return {
+                  ...p,
+                  nombre: defaultProd.nombre,
+                  slug: defaultProd.slug,
+                  imagenes: defaultProd.imagenes,
+                  descripcionCorta: defaultProd.descripcionCorta,
+                  descripcionCompleta: defaultProd.descripcionCompleta
+                };
+              }
             }
+            return p;
+          });
+          if (mutated) {
+            localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(enhanced));
           }
-          return p;
-        });
-        if (mutated) {
-          localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(enhanced));
+          return enhanced;
         }
-        return enhanced;
       }
     } catch (e) {
       console.error('Error loading products from localStorage', e);
@@ -54,15 +60,19 @@ class ProductService {
 
   private updateLocalCache(products: Product[]) {
     this.localProducts = products;
-    localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(this.localProducts));
-    window.dispatchEvent(new Event('mare_products_updated'));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(this.localProducts));
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('mare_products_updated'));
+    }
   }
 
   private async syncFromSupabase() {
     if (!isConfigured) return;
     try {
       // Smart Sync Verification
-      const localMetaStr = localStorage.getItem('mare_products_meta');
+      const localMetaStr = typeof localStorage !== 'undefined' ? localStorage.getItem('mare_products_meta') : null;
       const localMeta = localMetaStr ? JSON.parse(localMetaStr) : null;
       
       const { count } = await supabase.from('products').select('*', { count: 'exact', head: true });
@@ -81,7 +91,9 @@ class ProductService {
       this.updateLocalCache(products);
 
       // Save new meta
-      localStorage.setItem('mare_products_meta', JSON.stringify({ count: remoteCount, maxUpdated: remoteMaxUpdated }));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('mare_products_meta', JSON.stringify({ count: remoteCount, maxUpdated: remoteMaxUpdated }));
+      }
     } catch (e) {
       console.error('Failed to sync products:', e);
     }
@@ -174,24 +186,41 @@ class ProductService {
 
     let query = supabase
       .from('products')
-      .select('*, categories(name)', { count: 'exact' })
-      .eq('activo', true);
-
-    if (category) {
-      // Try to find if category is a slug or ID
-      const { data: catData } = await supabase
-        .from('categories')
-        .select('id')
-        .or(`id.eq.${category},slug.eq.${category}`)
-        .single();
-      
-      if (catData) {
-        query = query.eq('category_id', catData.id);
-      }
-    }
+      .select('*, categories(id, name, slug), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)', { count: 'exact' })
+      .eq('status', 'active');
 
     if (subcategoryId) {
-      query = query.eq('subcategory_id', subcategoryId);
+      // Find subcategory by id or slug
+      const catQuery = supabase.from('categories').select('id');
+      const { data: subcatData } = isUUID(subcategoryId)
+        ? await catQuery.eq('id', subcategoryId).maybeSingle()
+        : await catQuery.eq('slug', subcategoryId).maybeSingle();
+
+      const subId = subcatData ? subcatData.id : subcategoryId;
+      query = query.eq('category_id', subId);
+    } else if (category) {
+      // Try to find if category is a slug or ID
+      const catQuery = supabase.from('categories').select('id');
+      const { data: catData } = isUUID(category)
+        ? await catQuery.eq('id', category).maybeSingle()
+        : await catQuery.eq('slug', category).maybeSingle();
+      
+      if (catData) {
+        // Also fetch all subcategories under this parent category
+        const { data: childSubcats } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('parent_id', catData.id);
+
+        const catIds = [catData.id, ...(childSubcats || []).map(c => c.id)];
+        if (catIds.length === 1) {
+          query = query.eq('category_id', catIds[0]);
+        } else {
+          query = query.in('category_id', catIds);
+        }
+      } else if (isUUID(category)) {
+        query = query.eq('category_id', category);
+      }
     }
 
     if (tag) {
@@ -292,17 +321,47 @@ class ProductService {
   }
 
   async getProductsByCategory(categoryId: string): Promise<Product[]> {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*, categories(id, name, slug), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)')
-      .eq('category_id', categoryId)
-      .order('sort_order', { ascending: true });
-
-    if (error) {
-      return this.localProducts.filter(p => p.categoria === categoryId && p.activo !== false);
+    if (!isConfigured) {
+      return this.localProducts.filter(p => (p.categoria === categoryId || p.subcategoria === categoryId) && p.activo !== false);
     }
 
-    return data.map(p => this.mapSupabaseProduct(p)).filter(p => p.activo !== false);
+    try {
+      // Find category by id or slug
+      const catQuery = supabase.from('categories').select('id');
+      const { data: catData } = isUUID(categoryId)
+        ? await catQuery.eq('id', categoryId).maybeSingle()
+        : await catQuery.eq('slug', categoryId).maybeSingle();
+
+      const targetId = catData ? catData.id : categoryId;
+
+      // Find subcategories if any
+      const { data: childSubcats } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('parent_id', targetId);
+
+      const allCatIds = [targetId, ...(childSubcats || []).map(c => c.id)];
+
+      let query = supabase
+        .from('products')
+        .select('*, categories(id, name, slug), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)')
+        .eq('status', 'active');
+
+      if (allCatIds.length === 1) {
+        query = query.eq('category_id', allCatIds[0]);
+      } else {
+        query = query.in('category_id', allCatIds);
+      }
+
+      const { data, error } = await query.order('sort_order', { ascending: true });
+
+      if (error) throw error;
+
+      return (data || []).map(p => this.mapSupabaseProduct(p)).filter(p => p.activo !== false);
+    } catch (e) {
+      console.error('Error in getProductsByCategory:', e);
+      return this.localProducts.filter(p => (p.categoria === categoryId || p.subcategoria === categoryId) && p.activo !== false);
+    }
   }
 
   async createProduct(product: Omit<Product, 'id' | 'slug'>): Promise<Product> {

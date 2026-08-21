@@ -4,7 +4,7 @@ import { Search, Eye, Filter, Download, DollarSign, Package, MapPin, Calendar, C
 import { useToast } from '../../contexts/ToastContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([]);

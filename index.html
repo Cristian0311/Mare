@@ -10,7 +10,7 @@
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon.svg" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MARÉ">
     
@@ -176,6 +176,28 @@
   </head>
   <body>
     <div id="root"></div>
+    
+    <!-- Cargador Inicial para mejorar el LCP y la percepción de velocidad -->
+    <div class="initial-loader">
+      <div class="logo-container">
+        <div class="logo-pulse-ring"></div>
+        <div class="logo-box">
+          <img src="/icon.svg" alt="MARÉ Logo" />
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <h1 class="brand-title">MARÉ<span class="dot">.</span></h1>
+        <span class="brand-slogan">Todo lo que buscas</span>
+        <div class="wave-loader">
+          <div class="wave-progress"></div>
+        </div>
+      </div>
+      
+      <!-- Botón de recuperación oculta que aparece si falla la carga -->
+      <div class="recovery-action" id="recoveryAction">
+        <button onclick="forceResetApp()" class="recovery-btn">Reestablecer Aplicación</button>
+      </div>
+    </div>
     
     <script>
       // Fallback de emergencia por si React falla

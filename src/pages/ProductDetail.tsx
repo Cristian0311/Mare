@@ -209,7 +209,7 @@ export function ProductDetail() {
     if (!product) return [];
     
     // Prioritize same subcategory, then same category
-    let related = products.filter(p => p.id !== product.id && p.activo !== false);
+    const related = products.filter(p => p.id !== product.id && p.activo !== false);
     
     const sameSub = subcategory 
       ? related.filter(p => p.subcategoria === product.subcategoria)
@@ -269,7 +269,20 @@ export function ProductDetail() {
   };
 
   const handleIncrease = () => {
-    if (quantity < 999) setQuantity(quantity + 1);
+    if (quantity < 999) {
+      const nextQuantity = quantity + 1;
+      setQuantity(nextQuantity);
+
+      // Auto-activate wholesale if eligible and reached minimum
+      if (!isWholesale && product?.ventaMayorista?.habilitada && product.ventaMayorista.cantidadMinima && nextQuantity >= product.ventaMayorista.cantidadMinima) {
+        setIsWholesaleState(true);
+        toast({
+          type: 'success',
+          title: '¡Modo Mayorista Activado!',
+          description: `Alcanzaste el mínimo de ${product.ventaMayorista.cantidadMinima} unidades.`
+        });
+      }
+    }
   };
 
   const isInCart = items.some(item => item.id === product.id);
@@ -496,8 +509,11 @@ export function ProductDetail() {
                         if (!forceWholesale) {
                           const nextState = !isWholesale;
                           setIsWholesaleState(nextState);
-                          // Reset quantity when disabling wholesale
-                          if (!nextState) {
+                          if (nextState) {
+                            if (product?.ventaMayorista?.cantidadMinima && quantity < product.ventaMayorista.cantidadMinima) {
+                              setQuantity(product.ventaMayorista.cantidadMinima);
+                            }
+                          } else {
                             setQuantity(1);
                           }
                         }
@@ -594,14 +610,28 @@ export function ProductDetail() {
                   onChange={(e) => {
                     const val = parseInt(e.target.value);
                     if (!isNaN(val) && val >= 1) {
-                      // Clamp to wholesale minimum if active
-                      if (isWholesale && product.ventaMayorista?.cantidadMinima && val < product.ventaMayorista.cantidadMinima) {
-                        setQuantity(product.ventaMayorista.cantidadMinima);
-                      } else {
-                        setQuantity(val);
+                      setQuantity(val);
+                      // Auto-activate wholesale if eligible and reached minimum
+                      if (!isWholesale && product?.ventaMayorista?.habilitada && product.ventaMayorista.cantidadMinima && val >= product.ventaMayorista.cantidadMinima) {
+                        setIsWholesaleState(true);
+                        toast({
+                          type: 'success',
+                          title: '¡Modo Mayorista Activado!',
+                          description: `Alcanzaste el mínimo de ${product.ventaMayorista.cantidadMinima} unidades.`
+                        });
+                      } else if (isWholesale && !forceWholesale && product?.ventaMayorista?.cantidadMinima && val < product.ventaMayorista.cantidadMinima) {
+                        setIsWholesaleState(false);
+                        toast({
+                          type: 'info',
+                          title: 'Venta al Detalle',
+                          description: 'Se ha cambiado a precio por unidad por estar debajo del mínimo mayorista.'
+                        });
                       }
                     } else if (e.target.value === '') {
                       setQuantity(1);
+                      if (isWholesale && !forceWholesale) {
+                        setIsWholesaleState(false);
+                      }
                     }
                   }}
                   className="w-12 text-center font-black text-sm text-mare-navy bg-transparent border-none focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

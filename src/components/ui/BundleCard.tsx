@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Package, ChevronRight, Info } from 'lucide-react';
 import { Bundle } from '../../types/bundle';
 import { useCurrency } from '../../contexts/CurrencyContext';

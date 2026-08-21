@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { CaretRight, Package, CaretLeft } from 'phosphor-react';
 import { categoryService } from '../services/categories';
 import { productService } from '../services/products';

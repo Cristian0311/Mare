@@ -56,7 +56,7 @@ export function Favorites() {
   }, [baseFavoriteProducts]);
 
   const finalResults = useMemo(() => {
-    let filtered = filterProducts(baseFavoriteProducts, filterOptions);
+    const filtered = filterProducts(baseFavoriteProducts, filterOptions);
     // If recommended is selected, keep the favorites array order (newest first).
     if (sortOption === 'recommended') {
       return filtered;

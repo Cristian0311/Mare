@@ -3,7 +3,7 @@ import { Advisor } from '../../types';
 import { advisorsService } from '../../services/advisors';
 import { Edit, Trash2, Plus, Headset, CheckCircle, XCircle, ChevronRight, MessageCircle } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AdvisorForm } from '../components/AdvisorForm';
 
 export function AdminAdvisors() {

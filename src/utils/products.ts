@@ -6,30 +6,58 @@ export const getFeaturedProducts = (limit?: number): Product[] => {
   const products = productService.getProductsSync();
   const activeProducts = products.filter(p => p.activo !== false);
 
-  const sorted = activeProducts.sort((a, b) => {
-    // Prioridad Automática: Vistas
-    const getViews = (p: Product) => p.views_count ?? parseInt(localStorage.getItem(`mare_simulated_views_${p.id}`) || '0');
-    const viewsA = getViews(a);
-    const viewsB = getViews(b);
+  const sorted = [...activeProducts].sort((a, b) => {
+    // 1. Explicitly marked as featured in Supabase / admin
+    if (a.destacado && !b.destacado) return -1;
+    if (!a.destacado && b.destacado) return 1;
 
-    return viewsB - viewsA;
+    // 2. High views / popularity
+    const viewsA = a.views_count ?? (typeof localStorage !== 'undefined' ? parseInt(localStorage.getItem(`mare_simulated_views_${a.id}`) || '0') : 0);
+    const viewsB = b.views_count ?? (typeof localStorage !== 'undefined' ? parseInt(localStorage.getItem(`mare_simulated_views_${b.id}`) || '0') : 0);
+    if (viewsB !== viewsA) {
+      return viewsB - viewsA;
+    }
+
+    // 3. Diversified sequence by category to prevent duplicate ordering
+    const catA = a.categoria || '';
+    const catB = b.categoria || '';
+    if (catA !== catB) {
+      return catA.localeCompare(catB);
+    }
+
+    return a.orden - b.orden;
   });
 
-  return limit ? sorted.slice(0, limit) : sorted.slice(0, 8); // Top 8 by default
+  return limit ? sorted.slice(0, limit) : sorted.slice(0, 10);
 };
 
 export const getOffers = (limit?: number): Product[] => {
   const products = productService.getProductsSync();
-  const offers = products.filter(p => getProductPricing(p).hasOffer).sort((a, b) => a.orden - b.orden);
+  const activeProducts = products.filter(p => p.activo !== false);
+  const offers = activeProducts
+    .filter(p => getProductPricing(p).hasOffer)
+    .sort((a, b) => {
+      const pricingA = getProductPricing(a);
+      const pricingB = getProductPricing(b);
+      if (pricingB.discountPercentage !== pricingA.discountPercentage) {
+        return pricingB.discountPercentage - pricingA.discountPercentage;
+      }
+      return a.orden - b.orden;
+    });
   return limit ? offers.slice(0, limit) : offers;
 };
 
 export const getNewProducts = (limit?: number): Product[] => {
   const products = productService.getProductsSync();
-  const news = products
-    .filter(p => p.nuevo)
+  const activeProducts = products.filter(p => p.activo !== false);
+  const news = [...activeProducts]
     .sort((a, b) => {
-      return new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime();
+      if (a.nuevo && !b.nuevo) return -1;
+      if (!a.nuevo && b.nuevo) return 1;
+      const dateA = a.fechaCreacion ? new Date(a.fechaCreacion).getTime() : 0;
+      const dateB = b.fechaCreacion ? new Date(b.fechaCreacion).getTime() : 0;
+      if (dateA !== dateB) return dateB - dateA;
+      return b.orden - a.orden;
     });
   return limit ? news.slice(0, limit) : news;
 };

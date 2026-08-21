@@ -7,25 +7,40 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+let aiClient: GoogleGenAI | null = null;
+
+function getGeminiClient(): GoogleGenAI {
+  if (!aiClient) {
+    aiClient = new GoogleGenAI({ 
+      apiKey: process.env.GEMINI_API_KEY || "",
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+  }
+  return aiClient;
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
   app.use(express.json());
 
-  // Gemini Setup
-  const ai = new GoogleGenAI({ 
-    apiKey: process.env.GEMINI_API_KEY || "",
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      }
-    }
+  // API Routes
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
   });
 
-  // API Routes
   app.post("/api/log", (req, res) => { 
-    console.log("BROWSER ERROR:", req.body); 
+    try {
+      console.log("BROWSER ERROR:", req.body); 
+      fs.appendFileSync('browser_errors.log', JSON.stringify(req.body) + '\n');
+    } catch (e) {
+      console.error("Failed to append to browser_errors.log:", e);
+    }
     res.send("ok"); 
   });
 
@@ -49,6 +64,7 @@ async function startServer() {
 
       Responde ÚNICAMENTE con un JSON válido que sea un array de objetos con: { productId: string, placement: "Oferta" | "Recién Llegado" | "Destacado", reason: string }`;
 
+      const ai = getGeminiClient();
       const response = await ai.models.generateContent({
         model: "gemini-3.7-flash",
         contents: prompt,
@@ -103,6 +119,7 @@ Responde en formato JSON válido con las siguientes claves exactas:
   "actionableRecommendations": ["recomendación 1", "recomendación 2"]
 }`;
 
+      const ai = getGeminiClient();
       const response = await ai.models.generateContent({
         model: "gemini-3.7-flash",
         contents: prompt,
@@ -133,22 +150,32 @@ Responde en formato JSON válido con las siguientes claves exactas:
     }
   });
 
-  // Determine if we should run in production mode
-  // Resilient check: if dist/index.html exists, we are likely in production
-  const hasDist = fs.existsSync(path.join(process.cwd(), 'dist', 'index.html'));
-  const isProduction = process.env.NODE_ENV === "production" || process.env.RENDER === "true" || hasDist;
-  const distPath = path.join(process.cwd(), 'dist');
-
   // Vite middleware for development
-  if (!isProduction) {
-    console.log("Running in DEVELOPMENT mode with Vite middleware");
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
+  if (process.env.NODE_ENV !== "production" && process.env.VITE_DEV !== "false") {
+    console.log("Starting Vite in middleware mode (development)...");
+    try {
+      const vite = await createViteServer({
+        server: { 
+          middlewareMode: true, 
+          host: '0.0.0.0', 
+          port: PORT,
+          hmr: process.env.DISABLE_HMR !== 'true',
+        },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+      console.log("Vite middleware attached successfully.");
+    } catch (e) {
+      console.error("Critical: Failed to initialize Vite server:", e);
+    }
   } else {
-    console.log("Running in PRODUCTION mode serving from:", distPath);
+    const distPath = path.join(process.cwd(), 'dist');
+    console.log("Serving static production build from:", distPath);
+    
+    if (!fs.existsSync(distPath)) {
+      console.error("CRITICAL: dist directory NOT FOUND. Make sure to run 'npm run build' first.");
+    }
+    
     app.use(express.static(distPath));
     
     // Prevent fallback to index.html for missing assets
@@ -161,12 +188,55 @@ Responde en formato JSON válido con las siguientes claves exactas:
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`\n============================================================`);
+    console.log(`MARÉ SERVER STARTED SUCCESSFULLY`);
+    console.log(`PORT: ${PORT}`);
+    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? 'Present' : 'Missing'}`);
+    console.log(`============================================================\n`);
+  });
+
+  server.on('error', (err: any) => {
+    console.error('Express Server Error:', err);
+    if (err.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use. Exiting cleanly so runner can restart...`);
+      process.exit(1);
+    }
+  });
+
+  // Graceful shutdown handling
+  const shutdown = (signal: string) => {
+    console.log(`Received ${signal}. Shutting down gracefully...`);
+    server.close(() => {
+      console.log("Closed out remaining connections.");
+      process.exit(0);
+    });
+
+    // Force close after 2 seconds
+    setTimeout(() => {
+      console.error("Could not close connections in time, forcefully shutting down");
+      process.exit(1);
+    }, 2000);
+  };
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
+
+  process.on('uncaughtException', (err: any) => {
+    console.error('Uncaught Exception:', err);
+    if (err?.code === 'EADDRINUSE') {
+      process.exit(1);
+    }
+  });
+  
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   });
 }
 
-
-
-startServer();
+startServer().catch(err => {
+  console.error("Failed to start server:", err);
+  process.exit(1);
+});
 

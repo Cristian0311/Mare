@@ -86,25 +86,25 @@ export function Home() {
         <CategoryCarousel />
       </section>
 
-      {/* Todos los productos */}
-      {todosLosProductos.length > 0 && (
+      {/* 3. Destacados */}
+      {destacados.length > 0 && (
         <section>
           <SectionTitle 
-            title="Todos los productos" 
-            subtitle="Explora nuestro catálogo completo."
+            title="Productos destacados" 
+            subtitle="Nuestra mejor selección y favoritos."
             action={
-              <Link to="/coleccion/todos">
+              <Link to="/coleccion/destacados">
                 <Button variant="outline" className="text-[7px] font-black text-mare-navy border-mare-navy/20 bg-white hover:bg-mare-navy hover:text-white transition-all tracking-[0.2em] uppercase px-1.5 h-5 rounded-md shadow-sm">
                   VER TODO
                 </Button>
               </Link>
             }
           />
-          <ProductCarousel products={todosLosProductos} />
+          <ProductCarousel products={destacados} />
         </section>
       )}
 
-      {/* 2.5 Combos y Ofertas (Bundles) */}
+      {/* 4. Combos y Ofertas (Bundles) */}
       {activeBundles.length > 0 && (
         <section>
           <SectionTitle 
@@ -132,7 +132,7 @@ export function Home() {
         </section>
       )}
 
-      {/* 3. Ofertas de la Semana */}
+      {/* 5. Ofertas Especiales */}
       {ofertas.length > 0 && (
         <section>
           <SectionTitle 
@@ -150,12 +150,12 @@ export function Home() {
         </section>
       )}
 
-      {/* Venta por Volumen */}
+      {/* 6. Venta por Volumen */}
       {mayorista.length > 0 && (
         <section>
           <SectionTitle 
             title="Venta por Volumen" 
-            subtitle="Precios especiales"
+            subtitle="Precios especiales al por mayor."
             action={
               <Link to="/coleccion/mayorista" className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest hover:text-mare-green transition-colors">
                 Ver todos
@@ -166,30 +166,12 @@ export function Home() {
         </section>
       )}
 
-      {/* 6. Destacados */}
-      {destacados.length > 0 && (
-        <section>
-          <SectionTitle 
-            title="Productos destacados" 
-            subtitle="Nuestra mejor selección."
-            action={
-              <Link to="/coleccion/destacados">
-                <Button variant="outline" className="text-[7px] font-black text-mare-navy border-mare-navy/20 bg-white hover:bg-mare-navy hover:text-white transition-all tracking-[0.2em] uppercase px-1.5 h-5 rounded-md shadow-sm">
-                  VER TODO
-                </Button>
-              </Link>
-            }
-          />
-          <ProductCarousel products={destacados} />
-        </section>
-      )}
-
-      {/* 6. Nuevos / Recién Llegados */}
+      {/* 7. Nuevos / Recién Llegados */}
       {recienLlegados.length > 0 && (
         <section>
           <SectionTitle 
             title="Recién llegados" 
-            subtitle="Descubre lo nuevo."
+            subtitle="Descubre lo nuevo en la tienda."
             action={
               <Link to="/coleccion/novedades">
                 <Button variant="outline" className="text-[7px] font-black text-mare-navy border-mare-navy/20 bg-white hover:bg-mare-navy hover:text-white transition-all tracking-[0.2em] uppercase px-1.5 h-5 rounded-md shadow-sm">
@@ -199,6 +181,24 @@ export function Home() {
             }
           />
           <ProductCarousel products={recienLlegados} />
+        </section>
+      )}
+
+      {/* 8. Todos los productos */}
+      {todosLosProductos.length > 0 && (
+        <section>
+          <SectionTitle 
+            title="Todos los productos" 
+            subtitle="Explora nuestro catálogo completo."
+            action={
+              <Link to="/coleccion/todos">
+                <Button variant="outline" className="text-[7px] font-black text-mare-navy border-mare-navy/20 bg-white hover:bg-mare-navy hover:text-white transition-all tracking-[0.2em] uppercase px-1.5 h-5 rounded-md shadow-sm">
+                  VER TODO
+                </Button>
+              </Link>
+            }
+          />
+          <ProductCarousel products={todosLosProductos} />
         </section>
       )}
 

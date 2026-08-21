@@ -6,7 +6,7 @@ import { orderService } from '../../services/orders';
 import { productService } from '../../services/products';
 import { analyticsService } from '../../services/analytics';
 import { safeFetch } from '../../lib/utils/promise';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 import { metricsService } from '../../services/metrics';
 

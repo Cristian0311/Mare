@@ -225,7 +225,7 @@ class AutomationService {
     simulationNotes: string[];
   }> {
     let newAlertsCount = 0;
-    let newTasksCount = 0;
+    const newTasksCount = 0;
     const simulationNotes: string[] = [];
 
     try {

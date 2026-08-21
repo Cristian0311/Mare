@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Save, Truck, Info, ChevronRight, CircleDollarSign } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import { configService } from '../../services/config';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function AdminWholesale() {
   const [enabled, setEnabled] = useState(configService.getConfigSync()?.wholesale?.enabled || false);

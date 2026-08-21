@@ -103,7 +103,7 @@ export function AdminContent() {
     }
 
     const updated = [...faqsList];
-    let catIndex = updated.findIndex(c => c.category === newFaqCategory);
+    const catIndex = updated.findIndex(c => c.category === newFaqCategory);
     
     const newQuestion = {
       id: 'q-' + Date.now(),

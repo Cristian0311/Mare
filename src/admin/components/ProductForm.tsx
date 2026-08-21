@@ -166,11 +166,11 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
     }
 
     const cartesian = (args: string[][]): string[][] => {
-      let r: string[][] = [];
-      let max = args.length - 1;
+      const r: string[][] = [];
+      const max = args.length - 1;
       function helper(arr: string[], i: number) {
         for (let j = 0, l = args[i].length; j < l; j++) {
-          let a = arr.slice(0);
+          const a = arr.slice(0);
           a.push(args[i][j]);
           if (i === max) r.push(a);
           else helper(a, i + 1);

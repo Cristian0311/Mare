@@ -8,7 +8,7 @@ import {
 import { useToast } from '../../contexts/ToastContext';
 import { CategoryForm } from '../components/CategoryForm';
 import { getCategoryIcon } from '../../utils/categoryIcons';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function AdminCategories() {
   const [categories, setCategories] = useState<Category[]>([]);

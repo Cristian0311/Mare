@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { categoryService } from '../../services/categories';
 import { CaretRight, Package } from 'phosphor-react';
 import { getCategoryIcon } from '../../utils/categoryIcons';

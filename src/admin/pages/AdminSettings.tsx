@@ -6,7 +6,7 @@ import {
 import { useToast } from '../../contexts/ToastContext';
 import { configService } from '../../services/config';
 import { InfoTrigger } from '../components/InfoTrigger';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type SettingSection = 'store' | 'currency' | 'maintenance';
 
