@@ -550,15 +550,15 @@ export function ProductDetail() {
                         <span className="text-[9px] font-black text-mare-green uppercase tracking-widest">Seleccionado</span>
                       )}
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       {option.valores.map((val) => (
                         <button
                           key={val}
                           onClick={() => handleVariantSelect(option.nombre, val)}
-                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                          className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all border ${
                             selectedVariants[option.nombre] === val
                               ? 'bg-mare-navy text-white border-mare-navy shadow-md ring-2 ring-mare-navy/10'
-                              : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
+                              : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           {val}
