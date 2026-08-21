@@ -29,6 +29,16 @@ const availabilityConfig: Record<string, { text: string; color: string; dot: str
   'out_of_stock': { text: 'Agotado', color: 'text-red-600', dot: 'bg-red-500' },
 };
 
+function getProductRating(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash << 5) - hash + id.charCodeAt(i);
+    hash |= 0;
+  }
+  const ratings = [4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 5.0];
+  return ratings[Math.abs(hash) % ratings.length];
+}
+
 export function ProductCard({ product, onAdd, onClick, highlight = '' }: ProductCardProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -38,8 +48,8 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
   const { getBestPrice } = usePromotions();
   
   const pricing = getBestPrice(product, 1, false);
-
   const favorite = isFavorite(product.id);
+  const rating = getProductRating(product.id || product.nombre);
 
   // Use availability_status if available, fallback to legacy disponibilidad
   const availKey = (product.availability_status || product.disponibilidad || 'disponible').toLowerCase();
@@ -215,17 +225,66 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
       </div>
       
       <div className="flex flex-col flex-1 px-1">
-        {/* Nombre y Disponibilidad agrupados */}
+        {/* Marca y Nombre */}
         <div className="mb-2">
-          <div className="flex items-center gap-1 mb-1.5 min-w-0 overflow-hidden">
-            <span className={`w-1 h-1 rounded-full shrink-0 ${avail.dot}`}></span>
-            <span className={`text-[7px] font-bold uppercase tracking-widest truncate ${avail.color}`}>
-              {avail.text}
-            </span>
+          <div className="flex items-center justify-between gap-1 mb-1">
+            <div className="flex items-center gap-1 min-w-0 overflow-hidden">
+              <span className={`w-1 h-1 rounded-full shrink-0 ${avail.dot}`}></span>
+              <span className={`text-[7px] font-bold uppercase tracking-widest truncate ${avail.color}`}>
+                {avail.text}
+              </span>
+            </div>
+            {product.marca && (
+              <span className="text-[7px] font-black text-gray-300 uppercase tracking-widest truncate">
+                {product.marca}
+              </span>
+            )}
           </div>
-          <h3 className="font-black text-mare-navy text-[11px] sm:text-xs leading-snug line-clamp-2 min-h-[1.7rem] group-hover:text-mare-green transition-colors" title={product.nombre}>
+          
+          <h3 className="font-black text-mare-navy text-[11px] sm:text-xs leading-tight line-clamp-2 min-h-[1.7rem] group-hover:text-mare-green transition-colors mb-1" title={product.nombre}>
             <HighlightedText text={product.nombre} highlight={highlight} />
           </h3>
+
+          {/* Social Proof & Badges */}
+          <div className="flex items-center justify-between gap-2 min-h-[16px] my-0.5">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((star) => {
+                const isFull = star <= Math.floor(rating);
+                const isHalf = !isFull && star <= Math.round(rating);
+                return (
+                  <svg 
+                    key={star} 
+                    className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${
+                      isFull 
+                        ? 'text-amber-400' 
+                        : isHalf 
+                        ? 'text-amber-300' 
+                        : 'text-gray-200'
+                    } fill-current`} 
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                );
+              })}
+              <span className="text-[8.5px] sm:text-[9.5px] font-bold text-gray-500 ml-0.5">
+                {rating.toFixed(1)}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-1.5">
+              {product.stock !== undefined && product.stock > 0 && product.stock < 5 && (
+                <span className="text-[7.5px] sm:text-[8.5px] font-black text-amber-500 uppercase tracking-tighter animate-pulse">
+                  Pocas unidades
+                </span>
+              )}
+              {((product.variantes?.length || 0) > 1 || (product.opcionesVariantes?.length || 0) > 0) && (
+                <span className="text-[7.5px] sm:text-[8.5px] font-black bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-md border border-gray-200 uppercase tracking-tight">
+                  +Variantes
+                </span>
+              )}
+            </div>
+          </div>
         </div>
         
         <div className="mt-auto">

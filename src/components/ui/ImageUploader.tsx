@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { storageService, StorageBucket } from '../../services/storage';
 import { Upload, X, Check, Image as ImageIcon, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from './Button';
@@ -31,58 +31,95 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // States for interactive cropping tool
-  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [cropQueue, setCropQueue] = useState<File[]>([]);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [cropSrc, setCropSrc] = useState<string>('');
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
-  const handleFiles = async (fileList: FileList | File[]) => {
-    const files = Array.from(fileList);
-    if (files.length === 0) return;
+  const processNextInQueue = useCallback((index: number, queue: File[]) => {
+    if (index >= queue.length) {
+      setCropQueue([]);
+      setCurrentFileIndex(0);
+      setCropSrc('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
 
-    const file = files[0];
+    const file = queue[index];
     const reader = new FileReader();
     reader.onload = (e) => {
-      setCropFile(file);
       setCropSrc(e.target?.result as string || '');
       setZoom(1);
       setCrop({ x: 0, y: 0 });
       setCroppedAreaPixels(null);
+      setCurrentFileIndex(index);
     };
     reader.readAsDataURL(file);
+  }, []);
+
+  const handleFiles = async (fileList: FileList | File[]) => {
+    const files = Array.from(fileList);
+    if (files.length === 0) return;
+
+    setCropQueue(files);
+    processNextInQueue(0, files);
   };
 
   const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
+  // Adjust handlePerformCrop to use imagesRef
+  // Handle images ref to ensure we have the latest state during sequential uploads
+  const imagesRef = useRef(images);
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
+
   const handlePerformCrop = async () => {
-    if (!cropFile || !cropSrc || !croppedAreaPixels) return;
+    if (!cropSrc || !croppedAreaPixels || cropQueue.length === 0) return;
     
     setUploading(true);
-    setUploadProgress("Procesando y recortando...");
+    setUploadProgress(`Procesando imagen ${currentFileIndex + 1} de ${cropQueue.length}...`);
 
     try {
       const croppedImageFile = await getCroppedImg(cropSrc, croppedAreaPixels);
       if (croppedImageFile) {
-        const result = await storageService.uploadImage(croppedImageFile, bucket, `img_${Date.now()}`);
+        const result = await storageService.uploadImage(croppedImageFile, bucket, `img_${Date.now()}_${currentFileIndex}`);
+        
+        let updatedImages: string[];
         if (singleMode) {
-          onImagesChange([result.url]);
+          updatedImages = [result.url];
         } else {
-          onImagesChange([...images, result.url]);
+          updatedImages = [...imagesRef.current, result.url];
+        }
+        
+        onImagesChange(updatedImages);
+        imagesRef.current = updatedImages;
+
+        // If we have more in queue, go to next
+        const nextIndex = currentFileIndex + 1;
+        if (nextIndex < cropQueue.length && (singleMode || updatedImages.length < maxImages)) {
+          setUploading(false);
+          processNextInQueue(nextIndex, cropQueue);
+        } else {
+          // Finish
+          setUploading(false);
+          setUploadProgress('');
+          setCropQueue([]);
+          setCurrentFileIndex(0);
+          setCropSrc('');
+          if (fileInputRef.current) fileInputRef.current.value = '';
         }
       }
     } catch (e) {
       console.error(e);
-    } finally {
       setUploading(false);
-      setUploadProgress('');
-      setCropFile(null);
-      setCropSrc('');
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
+
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -250,14 +287,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         ))}
       </div>
 
-      {cropFile && cropSrc && (
+      {cropQueue.length > 0 && cropSrc && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-mare-navy/90 backdrop-blur-md">
           <div className="w-full max-w-lg bg-white rounded-[2rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-black text-mare-navy text-sm uppercase tracking-wider">Ajustar Imagen</h3>
+              <h3 className="font-black text-mare-navy text-sm uppercase tracking-wider">Ajustar Imagen {currentFileIndex + 1} de {cropQueue.length}</h3>
               <button 
                 type="button" 
-                onClick={() => { setCropFile(null); setCropSrc(''); }}
+                onClick={() => { setCropQueue([]); setCropSrc(''); }}
                 className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-mare-navy transition-all"
               >
                 <X className="w-5 h-5" />

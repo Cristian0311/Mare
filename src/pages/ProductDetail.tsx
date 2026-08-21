@@ -275,8 +275,8 @@ export function ProductDetail() {
   const isInCart = items.some(item => item.id === product.id);
 
   const handleAddToCart = () => {
-    // Check if all variants are selected
-    if (product.opcionesVariantes && product.opcionesVariantes.length > 0) {
+    // Check if all variants are selected (only if not wholesale, as wholesale is mixed box)
+    if (!isWholesale && product.opcionesVariantes && product.opcionesVariantes.length > 0) {
       const missingVariants = product.opcionesVariantes.filter(opt => !selectedVariants[opt.nombre]);
       if (missingVariants.length > 0) {
         toast({ 
@@ -289,8 +289,8 @@ export function ProductDetail() {
     }
 
     const retailPricing = getBestPrice(product, 1, false);
-    const variantId = Object.values(selectedVariants).join('-');
-    const variantName = Object.entries(selectedVariants).map(([k, v]) => `${k}: ${v}`).join(', ');
+    const variantId = isWholesale ? 'surtido-mixto' : Object.values(selectedVariants).join('-');
+    const variantName = isWholesale ? 'Surtido Mixto' : Object.entries(selectedVariants).map(([k, v]) => `${k}: ${v}`).join(', ');
     
     // Si ya fue agregado recientemente con la MISMA variante y el MISMO estado (mayorista/reserva), 
     // entonces navegamos al carrito. De lo contrario, permitimos agregar la nueva variante/opción.
@@ -492,7 +492,16 @@ export function ProductDetail() {
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">Activar</span>
                     <button 
-                      onClick={() => !forceWholesale && setIsWholesaleState(!isWholesale)}
+                      onClick={() => {
+                        if (!forceWholesale) {
+                          const nextState = !isWholesale;
+                          setIsWholesaleState(nextState);
+                          // Reset quantity when disabling wholesale
+                          if (!nextState) {
+                            setQuantity(1);
+                          }
+                        }
+                      }}
                       disabled={forceWholesale}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${isWholesale ? 'bg-mare-green' : 'bg-gray-200'} ${forceWholesale ? 'opacity-70 cursor-not-allowed' : ''}`}
                     >
@@ -519,33 +528,47 @@ export function ProductDetail() {
 
           {/* Variantes */}
           {product.opcionesVariantes && product.opcionesVariantes.length > 0 && (
-            <div className="flex flex-col gap-5 py-2">
-              {product.opcionesVariantes.map((option) => (
-                <div key={option.nombre} className="flex flex-col gap-2.5">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{option.nombre}</h3>
-                    {selectedVariants[option.nombre] && (
-                      <span className="text-[9px] font-black text-mare-green uppercase tracking-widest">Seleccionado</span>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {option.valores.map((val) => (
-                      <button
-                        key={val}
-                        onClick={() => handleVariantSelect(option.nombre, val)}
-                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
-                          selectedVariants[option.nombre] === val
-                            ? 'bg-mare-navy text-white border-mare-navy shadow-md ring-2 ring-mare-navy/10'
-                            : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
-                        }`}
-                      >
-                        {val}
-                      </button>
-                    ))}
-                  </div>
+            isWholesale ? (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center gap-3 my-2">
+                <Package className="w-5 h-5 text-amber-600 shrink-0" />
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider">
+                    Surtido Mixto (Caja / Lote Variado)
+                  </span>
+                  <span className="text-[9px] font-medium text-amber-700/90 leading-snug">
+                    En compras al por mayor la presentación se entrega en caja con variedad mixta de colores y tallas según disponibilidad de almacén.
+                  </span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-5 py-2">
+                {product.opcionesVariantes.map((option) => (
+                  <div key={option.nombre} className="flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{option.nombre}</h3>
+                      {selectedVariants[option.nombre] && (
+                        <span className="text-[9px] font-black text-mare-green uppercase tracking-widest">Seleccionado</span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {option.valores.map((val) => (
+                        <button
+                          key={val}
+                          onClick={() => handleVariantSelect(option.nombre, val)}
+                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                            selectedVariants[option.nombre] === val
+                              ? 'bg-mare-navy text-white border-mare-navy shadow-md ring-2 ring-mare-navy/10'
+                              : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
+                          }`}
+                        >
+                          {val}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           )}
           
           <Divider />
@@ -565,9 +588,25 @@ export function ProductDetail() {
                 >
                   <Minus strokeWidth={2} className="w-3.5 h-3.5" />
                 </button>
-                <div className="w-10 text-center font-black text-sm text-mare-navy select-none">
-                  {quantity}
-                </div>
+                <input 
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val >= 1) {
+                      // Clamp to wholesale minimum if active
+                      if (isWholesale && product.ventaMayorista?.cantidadMinima && val < product.ventaMayorista.cantidadMinima) {
+                        setQuantity(product.ventaMayorista.cantidadMinima);
+                      } else {
+                        setQuantity(val);
+                      }
+                    } else if (e.target.value === '') {
+                      setQuantity(1);
+                    }
+                  }}
+                  className="w-12 text-center font-black text-sm text-mare-navy bg-transparent border-none focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  disabled={!isAvailable}
+                />
                 <button 
                   onClick={handleIncrease}
                   className="p-2 text-gray-400 hover:text-mare-navy hover:bg-white rounded-lg transition-all disabled:opacity-30"
