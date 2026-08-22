@@ -17,20 +17,20 @@ export function Logo({ variant = 'full', className = '', iconClassName = '', tex
         xmlns="http://www.w3.org/2000/svg"
         className="w-full h-full"
       >
-        {/* The 'M' Shape */}
+        {/* The 'M' Shape - Rounded and matching the brand logo */}
         <path
-          d="M15 85V25L50 60L85 25V85"
+          d="M20 80V30L50 60L80 30V80"
           stroke="currentColor"
-          strokeWidth="12"
+          strokeWidth="10"
           strokeLinecap="round"
           strokeLinejoin="round"
           className={isWhite ? 'text-white' : 'text-mare-green'}
         />
-        {/* The Wave */}
+        {/* The Wave - Smoother and positioned at the bottom */}
         <path
-          d="M5 75C25 60 45 90 65 75C85 60 100 75 100 75"
+          d="M10 85C30 75 40 95 60 85C80 75 90 85 90 85"
           stroke="currentColor"
-          strokeWidth="8"
+          strokeWidth="6"
           strokeLinecap="round"
           className={isWhite ? 'text-white/80' : 'text-mare-turquoise'}
         />

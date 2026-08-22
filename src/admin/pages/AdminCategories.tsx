@@ -87,6 +87,18 @@ export function AdminCategories() {
     }
   };
 
+  const handleResetToDefaults = async () => {
+    if (window.confirm('¿Deseas restaurar todas las categorías a los valores por defecto del sistema? Esto sobrescribirá cualquier cambio manual que hayas hecho en nombres u orden de categorías si no usas Supabase.')) {
+      try {
+        await categoryService.resetToDefaults();
+        success('Restauradas', 'Las categorías han sido sincronizadas con el código del sistema.');
+        loadCategories();
+      } catch (err) {
+        error('Error', 'No se pudieron restaurar las categorías.');
+      }
+    }
+  };
+
   const filteredCategories = categories.filter(c => 
     c.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.id.toLowerCase().includes(searchTerm.toLowerCase())
@@ -163,13 +175,22 @@ export function AdminCategories() {
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Niveles de Navegación</span>
           </div>
         </div>
-        <button 
-          onClick={() => setShowForm(true)} 
-          className="flex items-center rounded-2xl px-6 py-3.5 font-black uppercase tracking-widest text-[10px] bg-mare-navy hover:bg-black text-white shadow-xl shadow-mare-navy/10 transition-all active:scale-95"
-        >
-          <Plus size={16} className="mr-2" />
-          Añadir Sección
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={handleResetToDefaults} 
+            className="flex items-center rounded-2xl px-6 py-3.5 font-black uppercase tracking-widest text-[10px] bg-white border border-gray-100 text-gray-400 hover:text-mare-turquoise hover:border-mare-turquoise shadow-sm transition-all active:scale-95"
+            title="Restaurar desde el código fuente"
+          >
+            Sincronizar Código
+          </button>
+          <button 
+            onClick={() => setShowForm(true)} 
+            className="flex items-center rounded-2xl px-6 py-3.5 font-black uppercase tracking-widest text-[10px] bg-mare-navy hover:bg-black text-white shadow-xl shadow-mare-navy/10 transition-all active:scale-95"
+          >
+            <Plus size={16} className="mr-2" />
+            Añadir Sección
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">

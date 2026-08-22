@@ -61,7 +61,16 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
     } else if (type === 'number') {
       setFormData(prev => ({ ...prev, [name]: value === '' ? undefined : parseFloat(value) }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData(prev => {
+        const newData = { ...prev, [name]: value };
+        
+        // Si cambia la categoría, reseteamos la subcategoría para evitar inconsistencias
+        if (name === 'categoria') {
+          newData.subcategoria = '';
+        }
+        
+        return newData;
+      });
     }
   };
 

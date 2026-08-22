@@ -20,10 +20,21 @@ class CategoryService {
       const saved = localStorage.getItem(CATEGORIES_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
+        
+        // Calcular el total de subcategorías tanto en local como en los datos por defecto
+        const countSubcats = (cats: Category[]) => 
+          cats.reduce((acc, cat) => acc + (cat.subcategorias?.length || 0), 0);
+          
+        const localSubcatCount = countSubcats(parsed);
+        const defaultSubcatCount = countSubcats(defaultCategories);
+
         const hasRopa = parsed.some((c: any) => c.id === 'ropa');
-        const hasModa = parsed.some((c: any) => c.id === '5' || c.nombre === 'Moda');
         const hasNewHogar = parsed.some((c: any) => c.id === 'hogar');
-        if (!hasRopa || hasModa || !hasNewHogar || parsed.length !== defaultCategories.length) {
+        
+        // Migrar si faltan categorías clave, si el número de categorías principales cambió,
+        // o si el número total de subcategorías ha cambiado (nuevo en esta actualización)
+        if (!hasRopa || !hasNewHogar || parsed.length !== defaultCategories.length || localSubcatCount !== defaultSubcatCount) {
+          console.log('Detectada discrepancia en categorías o subcategorías. Migrando caché local...');
           const migrated = defaultCategories.map(c => ({
             ...c,
             activo: c.activo !== undefined ? c.activo : true,
@@ -42,6 +53,20 @@ class CategoryService {
       activo: c.activo !== undefined ? c.activo : true,
       orden: 0
     }));
+  }
+
+  /**
+   * Fuerza la restauración de las categorías a los valores por defecto definidos en el código.
+   * Útil cuando el usuario quiere sincronizar cambios estructurales hechos en src/data/categories.ts
+   */
+  async resetToDefaults(): Promise<Category[]> {
+    const migrated = defaultCategories.map(c => ({
+      ...c,
+      activo: c.activo !== undefined ? c.activo : true,
+      orden: 0
+    }));
+    this.updateLocalCache(migrated);
+    return migrated;
   }
 
   private updateLocalCache(categories: Category[]) {
