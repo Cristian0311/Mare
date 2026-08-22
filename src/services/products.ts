@@ -411,7 +411,7 @@ class ProductService {
       stock_quantity: product.stock_quantity || 0,
       low_stock_threshold: product.low_stock_threshold || 5,
       sku: product.sku || null,
-      availability_status: product.disponibilidad,
+      availability_status: product.availability_status || (product.disponibilidad === 'agotado' ? 'out_of_stock' : 'available'),
       sort_order: product.orden || 0,
       opciones_variantes: product.opcionesVariantes || [],
       variantes: product.variantes || []
@@ -525,7 +525,7 @@ class ProductService {
       stock_quantity: product.stock_quantity || 0,
       low_stock_threshold: product.low_stock_threshold || 5,
       sku: product.sku || null,
-      availability_status: product.disponibilidad,
+      availability_status: product.availability_status || (product.disponibilidad === 'agotado' ? 'out_of_stock' : 'available'),
       sort_order: product.orden || 0,
       opciones_variantes: product.opcionesVariantes || [],
       variantes: product.variantes || []

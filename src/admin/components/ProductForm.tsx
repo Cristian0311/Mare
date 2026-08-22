@@ -26,6 +26,12 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
     categoryService.getAllCategories().then(data => setCategories(data));
   }, []);
   
+  useEffect(() => {
+    if (product) {
+      setFormData(product);
+    }
+  }, [product]);
+  
   const [formData, setFormData] = useState<Partial<Product>>(
     product || {
       nombre: '',

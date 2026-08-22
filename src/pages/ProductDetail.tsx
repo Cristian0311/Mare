@@ -238,7 +238,7 @@ export function ProductDetail() {
     );
   }
 
-  const isAvailable = product.disponibilidad !== 'agotado';
+  const isAvailable = product.disponibilidad !== 'agotado' && product.availability_status !== 'out_of_stock';
 
   const handleDecrease = () => {
     if (quantity > 1) {
@@ -352,7 +352,7 @@ export function ProductDetail() {
             productData={{
               price: pricing.finalPrice,
               currency: currentCurrency,
-              availability: product.disponibilidad === 'agotado' ? 'out of stock' : 'in stock'
+              availability: isAvailable ? 'in stock' : 'out of stock'
             }}
           />
           {seoData?.breadcrumbSchema && (
