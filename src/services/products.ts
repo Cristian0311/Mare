@@ -118,7 +118,8 @@ class ProductService {
         habilitada: wc.status === 'active',
         presentacion,
         cantidadMinima: wc.min_quantity,
-        precioMN: wc.price_cup
+        precioMN: wc.price_cup,
+        unidadesPorPresentacion: wc.units_per_presentation || 1
       };
     }
 
@@ -139,7 +140,7 @@ class ProductService {
       categoria: dbProduct.category_id,
       categoria_id: dbProduct.category_id,
       categoriaNombre: dbProduct.categories?.name,
-      etiquetas: [],
+      etiquetas: dbProduct.tags || [],
       estado: 'nuevo',
       disponibilidad: dbProduct.availability_status || availability,
       nuevo: dbProduct.is_new || false,
@@ -401,6 +402,7 @@ class ProductService {
       slug,
       description: product.descripcionCompleta || product.descripcionCorta,
       category_id: product.categoria || null,
+      tags: product.etiquetas || [],
       price_cup: product.precioMN,
       compare_at_price_cup: product.precioAnteriorMN || null,
       status: product.activo === false ? 'inactive' : 'active',
@@ -469,15 +471,24 @@ class ProductService {
       else if (pres === 'lote') unitType = 'lot';
       else if (pres === 'cantidad') unitType = 'quantity';
 
-      const { error: wsError } = await supabase
+      let wsPayload: any = {
+        product_id: dbProduct.id,
+        unit_type: unitType,
+        min_quantity: product.ventaMayorista.cantidadMinima || 1,
+        price_cup: product.ventaMayorista.precioMN || 0,
+        units_per_presentation: product.ventaMayorista.unidadesPorPresentacion || 1,
+        status: 'active'
+      };
+
+      let { error: wsError } = await supabase
         .from('wholesale_configs')
-        .insert({
-          product_id: dbProduct.id,
-          unit_type: unitType,
-          min_quantity: product.ventaMayorista.cantidadMinima || 1,
-          price_cup: product.ventaMayorista.precioMN || 0,
-          status: 'active'
-        });
+        .insert(wsPayload);
+        
+      if (wsError && wsError.message?.includes('units_per_presentation')) {
+        delete wsPayload.units_per_presentation;
+        const retry = await supabase.from('wholesale_configs').insert(wsPayload);
+        wsError = retry.error;
+      }
 
       if (wsError) console.error("Error inserting wholesale:", wsError);
     }
@@ -515,6 +526,7 @@ class ProductService {
       name: product.nombre,
       description: product.descripcionCompleta || product.descripcionCorta,
       category_id: product.categoria || null,
+      tags: product.etiquetas || [],
       price_cup: product.precioMN,
       compare_at_price_cup: product.precioAnteriorMN || null,
       status: product.activo === false ? 'inactive' : 'active',
@@ -571,15 +583,26 @@ class ProductService {
       else if (pres === 'lote') unitType = 'lot';
       else if (pres === 'cantidad') unitType = 'quantity';
 
-      await supabase
+      let wsPayload: any = {
+        product_id: product.id,
+        unit_type: unitType,
+        min_quantity: product.ventaMayorista.cantidadMinima || 1,
+        price_cup: product.ventaMayorista.precioMN || 0,
+        units_per_presentation: product.ventaMayorista.unidadesPorPresentacion || 1,
+        status: 'active'
+      };
+
+      let { error: wsError } = await supabase
         .from('wholesale_configs')
-        .insert({
-          product_id: product.id,
-          unit_type: unitType,
-          min_quantity: product.ventaMayorista.cantidadMinima || 1,
-          price_cup: product.ventaMayorista.precioMN || 0,
-          status: 'active'
-        });
+        .insert(wsPayload);
+        
+      if (wsError && wsError.message?.includes('units_per_presentation')) {
+        delete wsPayload.units_per_presentation;
+        const retry = await supabase.from('wholesale_configs').insert(wsPayload);
+        wsError = retry.error;
+      }
+      
+      if (wsError) console.error("Error inserting wholesale:", wsError);
     }
 
     // Sincronizar cache local para que la tienda pública se actualice al instante
