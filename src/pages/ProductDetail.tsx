@@ -701,6 +701,8 @@ export function ProductDetail() {
                   <Check strokeWidth={3} className="w-4 h-4 text-mare-green" />
                   ✓ AGREGADO A MI PEDIDO
                 </>
+              ) : !isAvailable ? (
+                'AGOTADO'
               ) : (
                 <>
                   <ShoppingBag strokeWidth={2} className="w-3.5 h-3.5" />
@@ -868,7 +870,7 @@ export function ProductDetail() {
             disabled={!isAvailable || isAdding}
             className={`flex-1 h-11 rounded-xl font-black text-[9px] tracking-widest shadow-md min-w-[130px] transition-all duration-300 ${isAdding ? 'opacity-90' : ''}`}
           >
-            {isAdding ? 'AÑADIENDO...' : addedRecently ? '✓ AGREGADO' : 'AÑADIR AL PEDIDO'}
+            {isAdding ? 'AÑADIENDO...' : addedRecently ? '✓ AGREGADO' : !isAvailable ? 'AGOTADO' : 'AÑADIR AL PEDIDO'}
           </Button>
         </div>
       </div>

@@ -347,11 +347,13 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
               size="sm"
               onClick={handleAddClick}
               className={`w-full sm:w-auto h-6 sm:h-[26px] px-2 sm:px-2.5 font-black text-[7px] sm:text-[8px] shadow-sm transition-all uppercase tracking-tighter rounded-lg shrink-0 ${
-'group-hover:bg-mare-turquoise'
+                availKey === 'agotado' || availKey === 'out_of_stock' 
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300' 
+                  : 'group-hover:bg-mare-turquoise'
               }`}
               disabled={availKey === 'agotado' || availKey === 'out_of_stock'}
             >
-{'AÑADIR'}
+              {availKey === 'agotado' || availKey === 'out_of_stock' ? 'AGOTADO' : 'AÑADIR'}
             </Button>
           </div>
         </div>

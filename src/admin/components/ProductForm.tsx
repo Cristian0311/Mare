@@ -75,7 +75,12 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
   };
 
   const handleAvailSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData(prev => ({ ...prev, disponibilidad: e.target.value as any }));
+    const value = e.target.value as any;
+    setFormData(prev => ({ 
+      ...prev, 
+      disponibilidad: value,
+      availability_status: value === 'agotado' ? 'out_of_stock' : 'available'
+    }));
   };
 
   const handleAddTag = (e: React.KeyboardEvent | React.MouseEvent) => {
