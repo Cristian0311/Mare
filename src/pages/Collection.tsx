@@ -102,7 +102,15 @@ export function Collection() {
         limit: 12,
         offset: isLoadMore ? paginatedResults.offset : 0,
         sort: sortMap[sortOption] || 'newest',
-        collection: type as any // Pasamos el tipo de colección a Supabase
+        collection: type as any,
+        category: filterOptions.categoryId,
+        subcategoryId: filterOptions.subcategoryId,
+        minPrice: filterOptions.minPrice,
+        maxPrice: filterOptions.maxPrice,
+        brands: filterOptions.brands,
+        tags: filterOptions.tags,
+        disponibilidad: filterOptions.disponibilidad,
+        estado: filterOptions.estado
       };
 
       const result = await productService.getPaginatedProducts(options);

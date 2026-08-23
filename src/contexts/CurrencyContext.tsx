@@ -44,10 +44,13 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('mare-currency', code);
   };
 
+  const exchangeRateEUR = currencyConfig.exchangeRateEUR;
+
   const convertPrice = useCallback((amountMN: number): number => {
     if (currency === 'MN') return amountMN;
-    return amountMN / exchangeRate;
-  }, [currency, exchangeRate]);
+    if (currency === 'EUR') return amountMN / exchangeRateEUR;
+    return amountMN / (exchangeRate || currencyConfig.exchangeRateUSD);
+  }, [currency, exchangeRate, exchangeRateEUR]);
 
   const formatPrice = useCallback((amountMN: number): string => {
     const amount = convertPrice(amountMN);
@@ -65,7 +68,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }).format(amount);
-      return `${formatted} USD`;
+      return `${formatted} ${currency}`;
     }
   }, [currency, convertPrice]);
 

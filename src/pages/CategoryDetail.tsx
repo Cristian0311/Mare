@@ -96,7 +96,10 @@ export function CategoryDetail() {
         sort: sortMap[sortOption] || 'newest',
         minPrice: filterOptions.minPrice,
         maxPrice: filterOptions.maxPrice,
-        brand: filterOptions.brands?.[0]
+        brands: filterOptions.brands,
+        tags: filterOptions.tags,
+        disponibilidad: filterOptions.disponibilidad,
+        estado: filterOptions.estado
       });
 
       setPaginatedResults(prev => ({
@@ -116,7 +119,7 @@ export function CategoryDetail() {
   // When category/subcategory, sort or filters change, fetch
   useEffect(() => {
     fetchProducts();
-  }, [category?.id, subcategory?.id, sortOption, filterOptions.minPrice, filterOptions.maxPrice, filterOptions.brands]);
+  }, [category?.id, subcategory?.id, sortOption, filterOptions]);
 
   // Sync category state when route params change
   useEffect(() => {

@@ -66,15 +66,15 @@ export function FilterSidebar({
       {/* Backdrop for mobile */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-black/60 z-[100] lg:hidden backdrop-blur-sm transition-opacity"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar Panel / Bottom Sheet (Mobile) */}
       <div className={`
-        fixed inset-x-0 bottom-0 z-50 w-full max-h-[85vh] rounded-t-[32px] bg-white shadow-[0_-20px_60px_rgba(0,0,0,0.15)] flex flex-col transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1)
-        lg:sticky lg:top-24 lg:inset-auto lg:w-72 lg:max-h-[calc(100vh-120px)] lg:rounded-3xl lg:max-w-none lg:shadow-xl lg:shadow-gray-200/50 lg:border lg:border-gray-100 lg:transition-none lg:translate-y-0 lg:ml-1 lg:flex
+        fixed inset-x-0 bottom-0 z-[110] w-full max-h-[85vh] rounded-t-[32px] bg-white shadow-[0_-20px_60px_rgba(0,0,0,0.25)] flex flex-col transition-transform duration-300 ease-out
+        lg:sticky lg:top-24 lg:inset-auto lg:z-10 lg:w-72 lg:max-h-[calc(100vh-120px)] lg:rounded-3xl lg:max-w-none lg:shadow-xl lg:shadow-gray-200/50 lg:border lg:border-gray-100 lg:transition-none lg:translate-y-0 lg:ml-1 lg:flex
         ${isOpen ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
       `}>
         {/* Handle for dragging (visual only) */}
@@ -271,15 +271,19 @@ export function FilterSidebar({
         </div>
         
         {/* Footer (Mobile only) */}
-        <div className="p-4 border-t border-gray-100 lg:hidden bg-gray-50 flex gap-3">
+        <div className="p-4 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] border-t border-gray-100 lg:hidden bg-white/95 backdrop-blur-md sticky bottom-0 z-20 flex gap-3 shadow-[0_-8px_20px_rgba(0,0,0,0.06)] shrink-0">
           <Button 
             variant="outline" 
-            className="flex-1" 
+            className="flex-1 py-3 text-xs font-black uppercase tracking-wider h-12" 
             onClick={() => onChange({ searchQuery: options.searchQuery })}
           >
             Limpiar
           </Button>
-          <Button variant="primary" className="flex-1" onClick={onClose}>
+          <Button 
+            variant="primary" 
+            className="flex-1 py-3 text-xs font-black uppercase tracking-wider h-12 shadow-lg shadow-mare-navy/10" 
+            onClick={onClose}
+          >
             Aplicar
           </Button>
         </div>

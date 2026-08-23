@@ -183,6 +183,10 @@ class ProductService {
     minPrice?: number;
     maxPrice?: number;
     brand?: string;
+    brands?: string[];
+    tags?: string[];
+    disponibilidad?: ('disponible' | 'agotado')[];
+    estado?: string[];
   } = {}): Promise<PaginatedProducts> {
     const { 
       category, 
@@ -195,7 +199,11 @@ class ProductService {
       collection,
       minPrice,
       maxPrice,
-      brand
+      brand,
+      brands,
+      tags,
+      disponibilidad,
+      estado
     } = options;
 
     let query = supabase
@@ -205,11 +213,13 @@ class ProductService {
 
     // Filtros de Colección Directos en Supabase
     if (collection === 'ofertas') {
-      query = query.gt('compare_at_price_cup', 0).filter('compare_at_price_cup', 'gt', 'price_cup');
+      query = query.gt('compare_at_price_cup', 0);
     } else if (collection === 'novedades') {
-      query = query.eq('is_new', true);
+      // Priorizar productos marcados como nuevos o por fecha reciente
+      query = query.order('is_new', { ascending: false }).order('created_at', { ascending: false });
     } else if (collection === 'destacados') {
-      query = query.eq('is_featured', true);
+      // Priorizar productos destacados o más populares sin ocultar el catálogo
+      query = query.order('is_featured', { ascending: false }).order('created_at', { ascending: false });
     } else if (collection === 'mayorista') {
       query = query.eq('product_type', 'wholesale');
     }
@@ -223,6 +233,40 @@ class ProductService {
     }
     if (brand && brand !== '') {
       query = query.ilike('brand', `%${brand}%`);
+    } else if (brands && brands.length > 0) {
+      query = query.in('brand', brands);
+    }
+
+    // Filtro de Disponibilidad
+    if (disponibilidad && disponibilidad.length > 0) {
+      const wantAvailable = disponibilidad.includes('disponible');
+      const wantAgotado = disponibilidad.includes('agotado');
+      if (wantAvailable && !wantAgotado) {
+        query = query.eq('available', true);
+      } else if (wantAgotado && !wantAvailable) {
+        query = query.eq('available', false);
+      }
+    }
+
+    // Filtro de Estado
+    if (estado && estado.length > 0) {
+      if (estado.includes('nuevo')) {
+        query = query.eq('is_new', true);
+      }
+      if (estado.includes('oferta')) {
+        query = query.gt('compare_at_price_cup', 0);
+      }
+      if (estado.includes('destacado')) {
+        query = query.eq('is_featured', true);
+      }
+      if (estado.includes('mayorista')) {
+        query = query.eq('product_type', 'wholesale');
+      }
+    }
+
+    // Filtro de Etiquetas
+    if (tags && tags.length > 0) {
+      query = query.overlaps('tags', tags);
     }
 
     // Jerarquía de Categorías y Subcategorías

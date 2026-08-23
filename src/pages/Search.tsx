@@ -60,8 +60,12 @@ export function Search() {
         sort: sortMap[sortOption] || 'newest',
         minPrice: filterOptions.minPrice,
         maxPrice: filterOptions.maxPrice,
-        brand: filterOptions.brands?.[0], // Simplificamos a la primera marca por ahora
-        category: filterOptions.categoryId
+        brands: filterOptions.brands,
+        tags: filterOptions.tags,
+        disponibilidad: filterOptions.disponibilidad,
+        estado: filterOptions.estado,
+        category: filterOptions.categoryId,
+        subcategoryId: filterOptions.subcategoryId
       });
 
       if (isLoadMore) {
@@ -84,7 +88,7 @@ export function Search() {
   // Fetch products when search query, sort or filters change
   useEffect(() => {
     fetchProducts();
-  }, [query, sortOption, filterOptions.minPrice, filterOptions.maxPrice, filterOptions.brands, filterOptions.categoryId]);
+  }, [query, sortOption, filterOptions]);
 
   // Sync query when it changes in URL
   useEffect(() => {

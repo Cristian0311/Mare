@@ -1,4 +1,4 @@
-export type CurrencyCode = 'MN' | 'USD';
+export type CurrencyCode = 'MN' | 'USD' | 'EUR';
 
 export interface Currency {
   code: CurrencyCode;
@@ -20,10 +20,17 @@ export const currencies: Record<CurrencyCode, Currency> = {
     symbol: 'USD',
     flag: '🇺🇸',
   },
+  EUR: {
+    code: 'EUR',
+    label: 'EUR',
+    symbol: 'EUR',
+    flag: '🇪🇺',
+  },
 };
 
 export const currencyConfig = {
   baseCurrency: 'MN' as CurrencyCode,
   exchangeRateUSD: 565, // 1 USD = 565 MN
+  exchangeRateEUR: 580, // 1 EUR = 580 MN
   defaultCurrency: 'MN' as CurrencyCode,
 };

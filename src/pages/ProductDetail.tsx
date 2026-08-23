@@ -798,12 +798,14 @@ export function ProductDetail() {
 
             {/* Método de Pago */}
             <div className="pt-4 border-t border-dashed border-gray-100">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100/50">
+              <div className="flex flex-col gap-1.5 p-3.5 bg-gray-50/80 rounded-xl border border-gray-100">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="w-3.5 h-3.5 text-mare-navy/40" />
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Pago al recibir</span>
+                  <DollarSign className="w-4 h-4 text-mare-green shrink-0" />
+                  <span className="text-[10px] font-black text-mare-navy uppercase tracking-widest">Pago al recibir</span>
                 </div>
-                <span className="text-[10px] font-black text-mare-navy uppercase tracking-widest">EFECTIVO / MN</span>
+                <p className="text-[10px] text-gray-500 font-medium pl-6 leading-tight">
+                  Aceptamos MN en efectivo o USD en efectivo.
+                </p>
               </div>
             </div>
           </div>

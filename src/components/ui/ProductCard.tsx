@@ -261,14 +261,14 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
               </span>
             </div>
             
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {product.stock !== undefined && product.stock > 0 && product.stock < 5 && (
-                <span className="text-[7.5px] sm:text-[8.5px] font-black text-amber-500 uppercase tracking-tighter animate-pulse">
+                <span className="text-[7.5px] sm:text-[8.5px] font-black text-amber-500 uppercase tracking-tighter animate-pulse shrink-0">
                   Pocas unidades
                 </span>
               )}
               {((product.variantes?.length || 0) > 1 || (product.opcionesVariantes?.length || 0) > 0) && (
-                <span className="text-[7.5px] sm:text-[8.5px] font-black bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-md border border-gray-200 uppercase tracking-tight">
+                <span className="text-[7.5px] sm:text-[8.5px] font-black bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-md border border-gray-200 uppercase tracking-tight shrink-0">
                   +Variantes
                 </span>
               )}

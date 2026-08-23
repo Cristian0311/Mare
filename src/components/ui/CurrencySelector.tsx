@@ -55,6 +55,11 @@ export function CurrencySelector() {
             className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-[60] overflow-hidden"
             role="listbox"
           >
+            <div className="px-3 py-1.5 border-b border-gray-100 bg-gray-50/50">
+              <p className="text-[9px] font-bold text-gray-400 leading-tight">
+                Visualización de precios
+              </p>
+            </div>
             {(Object.keys(currencies) as CurrencyCode[]).map((code) => (
               <button
                 key={code}
