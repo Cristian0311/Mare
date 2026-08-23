@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShareNetwork, Heart } from 'phosphor-react';
+import { ShareNetwork, Heart, Eye } from 'phosphor-react';
 import { Product, ProductAvailability } from '../../types';
 import { Badge } from './Badge';
 import { Button } from './Button';
@@ -50,6 +50,9 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
   const pricing = getBestPrice(product, 1, false);
   const favorite = isFavorite(product.id);
   const rating = getProductRating(product.id || product.nombre);
+
+  const simulatedViews = typeof localStorage !== 'undefined' ? parseInt(localStorage.getItem(`mare_simulated_views_${product.id}`) || '0') : 0;
+  const viewsCount = product.views_count ?? simulatedViews;
 
   // Use available boolean as single source of truth
   const availKey = product.available === false ? 'agotado' : 'disponible';
@@ -256,9 +259,17 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
                   </svg>
                 );
               })}
-              <span className="text-[8.5px] sm:text-[9.5px] font-bold text-gray-500 ml-0.5">
+              <span className="text-[8.5px] sm:text-[9.5px] font-bold text-gray-500 ml-0.5 mr-1.5">
                 {rating.toFixed(1)}
               </span>
+              {viewsCount > 0 && (
+                <div className="flex items-center gap-0.5 text-gray-400" title={`${viewsCount} vistas`}>
+                  <Eye weight="bold" className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  <span className="text-[8.5px] sm:text-[9.5px] font-bold">
+                    {viewsCount > 999 ? `${(viewsCount / 1000).toFixed(1)}k` : viewsCount}
+                  </span>
+                </div>
+              )}
             </div>
             
             <div className="flex items-center gap-1.5 flex-wrap">
