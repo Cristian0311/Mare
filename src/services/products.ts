@@ -137,12 +137,14 @@ class ProductService {
       imagenes: sortedImages,
       descripcionCorta: dbProduct.description || '',
       descripcionCompleta: dbProduct.description || '',
-      categoria: dbProduct.category_id,
+      // Mapeo inteligente de categorías jerárquicas
+      categoria: dbProduct.categories?.parent_id || dbProduct.category_id,
+      subcategoria: dbProduct.categories?.parent_id ? dbProduct.category_id : '',
       categoria_id: dbProduct.category_id,
       categoriaNombre: dbProduct.categories?.name,
       etiquetas: dbProduct.tags || [],
       estado: 'nuevo',
-      disponibilidad: dbProduct.availability_status || availability,
+      disponibilidad: dbProduct.availability_status ? (dbProduct.availability_status === 'out_of_stock' ? 'agotado' : 'disponible') : availability,
       nuevo: dbProduct.is_new || false,
       oferta: dbProduct.compare_at_price_cup > dbProduct.price_cup,
       destacado: dbProduct.is_featured || false,
@@ -270,7 +272,7 @@ class ProductService {
 
     const { data, error } = await supabase
       .from('products')
-      .select('*, categories(id, name, slug), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)')
+      .select('*, categories(id, name, slug, parent_id), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)')
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false });
 
@@ -292,7 +294,7 @@ class ProductService {
   async getProductBySlug(slug: string): Promise<Product | undefined> {
     const { data, error } = await supabase
       .from('products')
-      .select('*, categories(id, name, slug), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)')
+      .select('*, categories(id, name, slug, parent_id), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)')
       .eq('slug', slug)
       .maybeSingle();
 
@@ -310,7 +312,7 @@ class ProductService {
   async getProductById(id: string): Promise<Product | undefined> {
     const { data, error } = await supabase
       .from('products')
-      .select('*, categories(id, name, slug), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)')
+      .select('*, categories(id, name, slug, parent_id), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)')
       .eq('id', id)
       .maybeSingle();
 
@@ -345,7 +347,7 @@ class ProductService {
 
       let query = supabase
         .from('products')
-        .select('*, categories(id, name, slug), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)')
+        .select('*, categories(id, name, slug, parent_id), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)')
         .eq('status', 'active');
 
       if (allCatIds.length === 1) {
@@ -401,7 +403,10 @@ class ProductService {
       name: product.nombre,
       slug,
       description: product.descripcionCompleta || product.descripcionCorta,
-      category_id: product.categoria || null,
+      // Priorizar subcategoría si existe, de lo contrario usar categoría principal
+      category_id: (product.subcategoria && product.subcategoria !== '') 
+        ? product.subcategoria 
+        : ((product.categoria && product.categoria !== '') ? product.categoria : null),
       tags: product.etiquetas || [],
       price_cup: product.precioMN,
       compare_at_price_cup: product.precioAnteriorMN || null,
@@ -413,11 +418,19 @@ class ProductService {
       stock_quantity: product.stock_quantity || 0,
       low_stock_threshold: product.low_stock_threshold || 5,
       sku: product.sku || null,
-      availability_status: product.availability_status || (product.disponibilidad === 'agotado' ? 'out_of_stock' : 'available'),
+      // Sincronización estricta de disponibilidad
+      availability_status: (product.disponibilidad === 'agotado' || product.availability_status === 'out_of_stock') 
+        ? 'out_of_stock' 
+        : 'available',
       sort_order: product.orden || 0,
       opciones_variantes: product.opcionesVariantes || [],
       variantes: product.variantes || []
     };
+
+    // Forzar limpieza de category_id si no es un UUID válido
+    if (insertPayload.category_id && !isUUID(insertPayload.category_id)) {
+      insertPayload.category_id = null;
+    }
 
     // Insert Product
     let { data: insertData, error: prodError } = await supabase
@@ -526,7 +539,10 @@ class ProductService {
     const updatePayload: any = {
       name: product.nombre,
       description: product.descripcionCompleta || product.descripcionCorta,
-      category_id: product.categoria || null,
+      // Priorizar subcategoría si existe, de lo contrario usar categoría principal
+      category_id: (product.subcategoria && product.subcategoria !== '') 
+        ? product.subcategoria 
+        : ((product.categoria && product.categoria !== '') ? product.categoria : null),
       tags: product.etiquetas || [],
       price_cup: product.precioMN,
       compare_at_price_cup: product.precioAnteriorMN || null,
@@ -538,11 +554,19 @@ class ProductService {
       stock_quantity: product.stock_quantity || 0,
       low_stock_threshold: product.low_stock_threshold || 5,
       sku: product.sku || null,
-      availability_status: product.availability_status || (product.disponibilidad === 'agotado' ? 'out_of_stock' : 'available'),
+      // Sincronización estricta de disponibilidad
+      availability_status: (product.disponibilidad === 'agotado' || product.availability_status === 'out_of_stock') 
+        ? 'out_of_stock' 
+        : 'available',
       sort_order: product.orden || 0,
       opciones_variantes: product.opcionesVariantes || [],
       variantes: product.variantes || []
     };
+
+    // Forzar limpieza de category_id si no es un UUID válido para evitar errores 400
+    if (updatePayload.category_id && !isUUID(updatePayload.category_id)) {
+      updatePayload.category_id = null;
+    }
 
     let { error: prodError } = await supabase
       .from('products')
