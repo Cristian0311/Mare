@@ -32,7 +32,7 @@ const defaultFaqs = [
       {
         id: 'q4',
         title: '¿Cómo puedo pagar?',
-        content: 'MARÉ es una tienda catálogo y el pago no se realiza directamente en la web. Al contactarnos por WhatsApp tras enviar tu pedido, te informaremos sobre los métodos de pago disponibles (Transferencia, Efectivo, etc.).'
+        content: 'MARÉ es una tienda catálogo y el pago no se realiza directamente en la web. Al contactarnos por WhatsApp tras enviar tu pedido, te informaremos sobre los métodos de pago disponibles (Efectivo, etc.).'
       },
       {
         id: 'q5',

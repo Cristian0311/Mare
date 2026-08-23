@@ -26,9 +26,14 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
     categoryService.getAllCategories().then(data => setCategories(data));
   }, []);
   
+  // Asegurar que subcategoria y etiquetas estén inicializadas correctamente al editar
   useEffect(() => {
     if (product) {
-      setFormData(product);
+      setFormData({
+        ...product,
+        subcategoria: product.subcategoria || '',
+        etiquetas: Array.isArray(product.etiquetas) ? product.etiquetas : []
+      });
     }
   }, [product]);
   
@@ -71,7 +76,8 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
       setFormData(prev => {
         const newData = { ...prev, [name]: value };
         
-        // Si cambia la categoría, reseteamos la subcategoría para evitar inconsistencias
+        // Si cambia la categoría MANUALMENTE, reseteamos la subcategoría para evitar inconsistencias
+        // Pero solo si el nombre es 'categoria'
         if (name === 'categoria') {
           newData.subcategoria = '';
         }

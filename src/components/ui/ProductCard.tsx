@@ -52,7 +52,7 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
   const rating = getProductRating(product.id || product.nombre);
 
   // Use availability_status if available, fallback to legacy disponibilidad
-  const availKey = (product.availability_status === 'out_of_stock' || product.disponibilidad === 'agotado' || (product.stock !== undefined && product.stock === 0)) 
+  const availKey = (product.availability_status === 'out_of_stock' || product.disponibilidad === 'agotado') 
     ? 'agotado' 
     : 'disponible';
   

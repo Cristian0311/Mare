@@ -1,7 +1,7 @@
 import { configService } from '../services/config';
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Share2, ChevronRight, ArrowLeft, Heart, Check, Minus, Plus, ShoppingBag, X, Eye, Package, Truck, MessageCircle, ShieldCheck } from 'lucide-react';
+import { Share2, ChevronRight, ArrowLeft, Heart, Check, Minus, Plus, ShoppingBag, X, Eye, Package, Truck, MessageCircle, ShieldCheck, DollarSign } from 'lucide-react';
 import { productService } from '../services/products';
 import { categoryService } from '../services/categories';
 import { Button } from '../components/ui/Button';
@@ -239,8 +239,7 @@ export function ProductDetail() {
   }
 
   const isAvailable = product.disponibilidad !== 'agotado' && 
-                      product.availability_status !== 'out_of_stock' && 
-                      (product.stock === undefined || product.stock > 0);
+                      product.availability_status !== 'out_of_stock';
 
   const handleDecrease = () => {
     if (quantity > 1) {
@@ -753,55 +752,83 @@ export function ProductDetail() {
           </div>
         </div>
         
-        {/* Entrega */}
+        {/* Entrega y Pago - Diseño MARÉ */}
         <div className="lg:col-span-1">
           <h2 className="text-[10px] font-black text-mare-navy uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
             <div className="w-1.5 h-3 bg-mare-gold rounded-full"></div>
             Información de Entrega y Pago
           </h2>
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-5">
-            <div className="space-y-4">
+          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-6">
+            <div className="space-y-5">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-mare-green/10 flex items-center justify-center shrink-0">
-                  <Truck className="w-5 h-5 text-mare-green" />
+                <div className="w-9 h-9 rounded-xl bg-mare-green/10 flex items-center justify-center shrink-0">
+                  <Truck className="w-4.5 h-4.5 text-mare-green" />
                 </div>
                 <div>
                   <h4 className="text-[11px] font-black text-mare-navy uppercase tracking-widest mb-1">Envío a Domicilio</h4>
-                  <p className="text-xs text-gray-500 font-medium leading-relaxed">
-                    Gestionamos su entrega entre 24h y 72h. Un asesor coordinará con usted el horario exacto.
+                  <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
+                    Entregas en <span className="font-bold text-mare-navy">La Habana</span> entre 24h y 72h hábiles.
+                    Envíos al resto del país coordinados vía WhatsApp.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-mare-gold/10 flex items-center justify-center shrink-0">
-                  <MessageCircle className="w-5 h-5 text-mare-gold" />
+                <div className="w-9 h-9 rounded-xl bg-mare-gold/10 flex items-center justify-center shrink-0">
+                  <MessageCircle className="w-4.5 h-4.5 text-mare-gold" />
                 </div>
                 <div>
-                  <h4 className="text-[11px] font-black text-mare-navy uppercase tracking-widest mb-1">Pedido por WhatsApp</h4>
-                  <p className="text-xs text-gray-500 font-medium leading-relaxed">
-                    Al finalizar su pedido, se enviará automáticamente un mensaje a nuestro equipo para confirmar disponibilidad y pago.
+                  <h4 className="text-[11px] font-black text-mare-navy uppercase tracking-widest mb-1">Confirmación Inmediata</h4>
+                  <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
+                    Al finalizar su pedido, un asesor confirmará disponibilidad y coordinará el pago seguro por WhatsApp.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-mare-turquoise/10 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-5 h-5 text-mare-turquoise" />
+                <div className="w-9 h-9 rounded-xl bg-mare-turquoise/10 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4.5 h-4.5 text-mare-turquoise" />
                 </div>
                 <div>
-                  <h4 className="text-[11px] font-black text-mare-navy uppercase tracking-widest mb-1">Garantía MARÉ</h4>
-                  <p className="text-xs text-gray-500 font-medium leading-relaxed">
-                    Revisamos cada producto antes de salir. Su satisfacción y seguridad en el pago son nuestra prioridad.
+                  <h4 className="text-[11px] font-black text-mare-navy uppercase tracking-widest mb-1">Garantía y Confianza</h4>
+                  <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
+                    Productos verificados y atención personalizada en cada etapa de su compra.
                   </p>
                 </div>
               </div>
             </div>
 
+            {/* Zonas de Cobertura */}
+            <div className="pt-5 border-t border-dashed border-gray-100">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Cobertura Principal</span>
+                  <span className="flex items-center gap-1.5 text-[9px] font-black text-mare-green uppercase tracking-widest">
+                    <div className="w-1.5 h-1.5 rounded-full bg-mare-green animate-pulse"></div>
+                    Activa
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {['La Habana', 'Artemisa', 'Mayabeque'].map(prov => (
+                    <span key={prov} className="px-2.5 py-1 bg-gray-50 text-gray-600 rounded-lg text-[9px] font-bold border border-gray-100">
+                      {prov}
+                    </span>
+                  ))}
+                  <span className="px-2.5 py-1 bg-gray-50/50 text-gray-400 rounded-lg text-[9px] font-bold border border-dashed border-gray-200">
+                    Resto del país (Consultar)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Método de Pago */}
             <div className="pt-4 border-t border-dashed border-gray-100">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Método de Pago</span>
-                <span className="text-[10px] font-black text-mare-navy uppercase tracking-widest">Transferencia / Efectivo</span>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100/50">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-3.5 h-3.5 text-mare-navy/40" />
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Pago al recibir</span>
+                </div>
+                <span className="text-[10px] font-black text-mare-navy uppercase tracking-widest">EFECTIVO / MN</span>
               </div>
             </div>
           </div>

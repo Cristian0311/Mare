@@ -142,10 +142,10 @@ class ProductService {
       subcategoria: dbProduct.categories?.parent_id ? dbProduct.category_id : '',
       categoria_id: dbProduct.category_id,
       categoriaNombre: dbProduct.categories?.name,
-      etiquetas: dbProduct.tags || [],
+      etiquetas: Array.isArray(dbProduct.tags) ? dbProduct.tags : [],
       estado: 'nuevo',
       // Sincronización robusta de disponibilidad
-      disponibilidad: (dbProduct.availability_status === 'out_of_stock' || dbProduct.stock === 0) ? 'agotado' : 'disponible',
+      disponibilidad: (dbProduct.availability_status === 'out_of_stock' || dbProduct.availability_status === 'agotado' || dbProduct.disponibilidad === 'agotado') ? 'agotado' : 'disponible',
       nuevo: dbProduct.is_new || false,
       oferta: dbProduct.compare_at_price_cup > dbProduct.price_cup,
       destacado: dbProduct.is_featured || false,
@@ -479,7 +479,7 @@ class ProductService {
     // Insert Wholesale
     if (product.ventaMayorista && product.ventaMayorista.habilitada) {
       let unitType = 'unit';
-      const pres = product.ventaMayorista.presentacion?.toLowerCase();
+      const pres = String(product.ventaMayorista.presentacion || '').toLowerCase();
       if (pres === 'caja') unitType = 'box';
       else if (pres === 'paquete') unitType = 'package';
       else if (pres === 'lote') unitType = 'lot';
@@ -508,9 +508,15 @@ class ProductService {
     }
 
     // Sincronizar cache local para que la tienda pública se actualice al instante
+    const fullNewProduct = await this.getProductById(dbProduct.id);
+    if (fullNewProduct) {
+      this.localProducts = [fullNewProduct, ...this.localProducts];
+      this.updateLocalCache(this.localProducts);
+    }
+
     await this.syncFromSupabase();
 
-    return this.getProductById(dbProduct.id) as Promise<Product>;
+    return fullNewProduct as Product;
   }
 
   async updateProduct(product: Product): Promise<void> {
@@ -540,10 +546,10 @@ class ProductService {
       name: product.nombre,
       description: product.descripcionCompleta || product.descripcionCorta,
       // Priorizar subcategoría si existe, de lo contrario usar categoría principal
-      category_id: (product.subcategoria && product.subcategoria !== '') 
+      category_id: (product.subcategoria && product.subcategoria !== '' && product.subcategoria !== 'undefined') 
         ? product.subcategoria 
-        : ((product.categoria && product.categoria !== '') ? product.categoria : null),
-      tags: product.etiquetas || [],
+        : ((product.categoria && product.categoria !== '' && product.categoria !== 'undefined') ? product.categoria : null),
+      tags: Array.isArray(product.etiquetas) ? product.etiquetas : [],
       price_cup: product.precioMN,
       compare_at_price_cup: product.precioAnteriorMN || null,
       status: product.activo === false ? 'inactive' : 'active',
@@ -629,8 +635,12 @@ class ProductService {
       if (wsError) console.error("Error inserting wholesale:", wsError);
     }
 
-    // Sincronizar cache local para que la tienda pública se actualice al instante
-    await this.syncFromSupabase();
+    // Sincronizar cache local inmediatamente para evitar retrasos en la UI
+    this.localProducts = this.localProducts.map(p => p.id === product.id ? { ...p, ...product } : p);
+    this.updateLocalCache(this.localProducts);
+
+    // Sincronizar con Supabase en segundo plano (no bloqueante)
+    this.syncFromSupabase().catch(console.error);
   }
 
   async toggleProductStatus(id: string, activo: boolean): Promise<void> {

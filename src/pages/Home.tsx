@@ -69,17 +69,47 @@ export function Home() {
   }, []);
 
   const ofertas = useMemo(() => getPromotionalProducts(), [productsVersion]);
-  const destacados = useMemo(() => getFeaturedProducts(), [productsVersion]);
   
-  // Lógica de deduplicación: Los productos no se repiten en secciones, excepto los mayoristas
+  // Lógica de rotación para Destacados (Max 6, rotación horaria si hay más)
+  const destacados = useMemo(() => {
+    const all = getFeaturedProducts();
+    if (all.length <= 6) return all;
+    
+    // Rotación básica: cambia cada hora
+    const hour = new Date().getHours();
+    const totalBatches = Math.ceil(all.length / 6);
+    const batchIndex = hour % totalBatches;
+    const start = batchIndex * 6;
+    
+    // Si llegamos al final, volvemos a empezar o ajustamos
+    const result = all.slice(start, start + 6);
+    if (result.length < 6) {
+      return [...result, ...all.slice(0, 6 - result.length)];
+    }
+    return result;
+  }, [productsVersion]);
+  
+  // Lógica de deduplicación y rotación para Recién Llegados (Max 6)
   const recienLlegados = useMemo(() => {
     const items = getRecentProducts();
-    const excludeIds = new Set([
-      ...ofertas.map(p => p.id),
-      ...destacados.map(p => p.id)
-    ]);
-    return items.filter(p => p.ventaMayorista?.habilitada || !excludeIds.has(p.id));
-  }, [ofertas, destacados, productsVersion]);
+    // Excluimos productos ya mostrados en Destacados (excepto si son mayoristas)
+    const excludeIds = new Set(destacados.map(p => p.id));
+    const filtered = items.filter(p => p.ventaMayorista?.habilitada || !excludeIds.has(p.id));
+    
+    if (filtered.length <= 6) return filtered;
+    
+    // Rotación para novedades (diferente offset para que no coincida con destacados)
+    const hour = new Date().getHours();
+    const totalBatches = Math.ceil(filtered.length / 6);
+    const batchIndex = (hour + 1) % totalBatches; // +1 para variar
+    const start = batchIndex * 6;
+    
+    const result = filtered.slice(start, start + 6);
+    if (result.length < 6) {
+      return [...result, ...filtered.slice(0, 6 - result.length)];
+    }
+    return result;
+  }, [destacados, productsVersion]);
 
   const recomendados = useMemo(() => {
     const items = getBestSellers();
@@ -88,11 +118,25 @@ export function Home() {
       ...destacados.map(p => p.id),
       ...recienLlegados.map(p => p.id)
     ]);
+    // Los mayoristas siempre pueden aparecer
     return items.filter(p => p.ventaMayorista?.habilitada || !excludeIds.has(p.id));
   }, [ofertas, destacados, recienLlegados, productsVersion]);
 
   const mayorista = useMemo(() => getWholesaleProducts(), [productsVersion]);
-  const todosLosProductos = useMemo(() => getAllPublicProducts(), [productsVersion]);
+
+  // "Todos los productos" Prioriza productos que NO están en las secciones anteriores
+  const todosLosProductos = useMemo(() => {
+    const all = getAllPublicProducts();
+    const featuredIds = new Set([
+      ...destacados.map(p => p.id),
+      ...recienLlegados.map(p => p.id)
+    ]);
+    
+    const notFeatured = all.filter(p => !featuredIds.has(p.id));
+    const featured = all.filter(p => featuredIds.has(p.id));
+    
+    return [...notFeatured, ...featured];
+  }, [destacados, recienLlegados, productsVersion]);
 
   return (
     <div className="space-y-12 md:space-y-20 pb-12">

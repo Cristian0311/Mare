@@ -99,7 +99,7 @@ class ContentService {
       {
         category: 'Pagos y Precios',
         questions: [
-          { id: 'q4', title: '¿Cómo puedo pagar?', content: 'MARÉ es una tienda catálogo y el pago no se realiza directamente en la web. Al contactarnos por WhatsApp tras enviar tu pedido, te informaremos sobre los métodos de pago disponibles (Transferencia, Efectivo, etc.).' },
+          { id: 'q4', title: '¿Cómo puedo pagar?', content: 'MARÉ es una tienda catálogo y el pago no se realiza directamente en la web. Al contactarnos por WhatsApp tras enviar tu pedido, te informaremos sobre los métodos de pago disponibles (Efectivo, etc.).' },
           { id: 'q5', title: '¿Puedo ver los precios en USD?', content: 'Sí. Por defecto los precios se muestran en MN (CUP), pero puedes utilizar el selector de moneda en el menú para ver una conversión informativa en USD según la tasa actual.' }
         ]
       }
