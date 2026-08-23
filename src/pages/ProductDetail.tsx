@@ -238,7 +238,9 @@ export function ProductDetail() {
     );
   }
 
-  const isAvailable = product.disponibilidad !== 'agotado' && product.availability_status !== 'out_of_stock';
+  const isAvailable = product.disponibilidad !== 'agotado' && 
+                      product.availability_status !== 'out_of_stock' && 
+                      (product.stock === undefined || product.stock > 0);
 
   const handleDecrease = () => {
     if (quantity > 1) {

@@ -52,12 +52,12 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
   const rating = getProductRating(product.id || product.nombre);
 
   // Use availability_status if available, fallback to legacy disponibilidad
-  const availKey = (product.availability_status || product.disponibilidad || 'disponible').toLowerCase();
+  const availKey = (product.availability_status === 'out_of_stock' || product.disponibilidad === 'agotado' || (product.stock !== undefined && product.stock === 0)) 
+    ? 'agotado' 
+    : 'disponible';
   
   let avail;
-  if (availabilityConfig[availKey]) {
-    avail = availabilityConfig[availKey];
-  } else if (availKey === 'agotado') {
+  if (availKey === 'agotado') {
     avail = { text: 'Agotado', color: 'text-red-600', dot: 'bg-red-500' };
   } else {
     avail = { text: 'Disponible', color: 'text-green-600', dot: 'bg-green-500' };
@@ -65,24 +65,15 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
 
   const displayTags = [];
   
-  // Si no es reserva, mostramos el estado de disponibilidad si es algo especial (ej: 24h, 48h, etc)
-  if (availKey !== 'disponible' && availKey !== 'available') {
-    displayTags.push({ text: avail.text, variant: availKey === 'agotado' || availKey === 'out_of_stock' ? 'error' : 'default' as const });
+  // Mostrar SIEMPRE la etiqueta de Agotado si lo está
+  if (availKey === 'agotado') {
+    displayTags.push({ text: 'Agotado', variant: 'error' as const });
   }
 
   if (pricing.discountPercentage > 0) displayTags.push({ text: `-${pricing.discountPercentage}%`, variant: 'gold' as const });
   else if (product.oferta) displayTags.push({ text: 'Oferta', variant: 'gold' as const });
   if (product.ventaMayorista?.habilitada) displayTags.push({ text: 'Mayorista', variant: 'success' as const });
   if (product.nuevo) displayTags.push({ text: 'Nuevo', variant: 'success' as const });
-
-  if (product.etiquetas) {
-    for (const tag of product.etiquetas) {
-      if (displayTags.length >= 2) break;
-      if (tag !== 'oferta' && tag !== 'nuevo' && tag !== 'mas-buscado' && tag !== 'destacado') {
-        displayTags.push({ text: tag.replace('-', ' '), variant: 'default' as const });
-      }
-    }
-  }
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -347,13 +338,13 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
               size="sm"
               onClick={handleAddClick}
               className={`w-full sm:w-auto h-6 sm:h-[26px] px-2 sm:px-2.5 font-black text-[7px] sm:text-[8px] shadow-sm transition-all uppercase tracking-tighter rounded-lg shrink-0 ${
-                availKey === 'agotado' || availKey === 'out_of_stock' 
+                availKey === 'agotado' 
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300' 
                   : 'group-hover:bg-mare-turquoise'
               }`}
-              disabled={availKey === 'agotado' || availKey === 'out_of_stock'}
+              disabled={availKey === 'agotado'}
             >
-              {availKey === 'agotado' || availKey === 'out_of_stock' ? 'AGOTADO' : 'AÑADIR'}
+              {availKey === 'agotado' ? 'AGOTADO' : 'AÑADIR'}
             </Button>
           </div>
         </div>

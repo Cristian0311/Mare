@@ -137,14 +137,15 @@ class ProductService {
       imagenes: sortedImages,
       descripcionCorta: dbProduct.description || '',
       descripcionCompleta: dbProduct.description || '',
-      // Mapeo inteligente de categorías jerárquicas
-      categoria: dbProduct.categories?.parent_id || dbProduct.category_id,
+      // Mapeo inteligente de categorías jerárquicas - REFORZADO
+      categoria: dbProduct.categories?.parent_id ? dbProduct.categories.parent_id : dbProduct.category_id,
       subcategoria: dbProduct.categories?.parent_id ? dbProduct.category_id : '',
       categoria_id: dbProduct.category_id,
       categoriaNombre: dbProduct.categories?.name,
       etiquetas: dbProduct.tags || [],
       estado: 'nuevo',
-      disponibilidad: dbProduct.availability_status ? (dbProduct.availability_status === 'out_of_stock' ? 'agotado' : 'disponible') : availability,
+      // Sincronización robusta de disponibilidad
+      disponibilidad: (dbProduct.availability_status === 'out_of_stock' || dbProduct.stock === 0) ? 'agotado' : 'disponible',
       nuevo: dbProduct.is_new || false,
       oferta: dbProduct.compare_at_price_cup > dbProduct.price_cup,
       destacado: dbProduct.is_featured || false,
@@ -189,7 +190,7 @@ class ProductService {
 
     let query = supabase
       .from('products')
-      .select('*, categories(id, name, slug), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)', { count: 'exact' })
+      .select('*, categories(id, name, slug, parent_id), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)', { count: 'exact' })
       .eq('status', 'active');
 
     if (subcategoryId) {
@@ -231,7 +232,8 @@ class ProductService {
     }
 
     if (search) {
-      query = query.ilike('name', `%${search}%`);
+      // Búsqueda mejorada por nombre, descripción o etiquetas
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,tags.cs.{"${search}"}`);
     }
 
     // Sorting
