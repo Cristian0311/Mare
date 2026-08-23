@@ -75,7 +75,9 @@ export function CategoryDetail() {
     if (!category) return;
 
     if (isLoadMore) setIsLoadingMore(true);
-    else setIsLoading(true);
+    else {
+      setIsLoading(true);
+    }
 
     try {
       const sortMap: Record<string, 'newest' | 'price-asc' | 'price-desc' | 'popular'> = {
@@ -91,7 +93,10 @@ export function CategoryDetail() {
         subcategoryId: subcategory?.id,
         limit: 12,
         offset: isLoadMore ? paginatedResults.offset : 0,
-        sort: sortMap[sortOption] || 'newest'
+        sort: sortMap[sortOption] || 'newest',
+        minPrice: filterOptions.minPrice,
+        maxPrice: filterOptions.maxPrice,
+        brand: filterOptions.brands?.[0]
       });
 
       setPaginatedResults(prev => ({
@@ -108,16 +113,23 @@ export function CategoryDetail() {
     }
   };
 
-  // When category/subcategory or sort changes, reset and fetch
+  // When category/subcategory, sort or filters change, fetch
   useEffect(() => {
-    window.scrollTo(0, 0);
-    setFilterOptions({ 
+    fetchProducts();
+  }, [category?.id, subcategory?.id, sortOption, filterOptions.minPrice, filterOptions.maxPrice, filterOptions.brands]);
+
+  // Sync category state when route params change
+  useEffect(() => {
+    setFilterOptions(prev => ({ 
+      ...prev,
       categoryId: category?.id,
       subcategoryId: subcategory?.id
-    });
-    setSortOption('recommended');
-    fetchProducts();
-  }, [category?.id, subcategory?.id, sortOption]);
+    }));
+  }, [category?.id, subcategory?.id]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [category?.id, subcategory?.id]);
 
   const finalResults = paginatedResults.products;
 
@@ -129,8 +141,19 @@ export function CategoryDetail() {
     return finalResults.filter(p => p.oferta);
   }, [finalResults]);
 
-  const availableBrands: string[] = [];
-  const availableTags: string[] = [];
+  const { availableBrands, availableTags } = useMemo(() => {
+    const brands = new Set<string>();
+    const tags = new Set<string>();
+    // Usamos los productos de la categoría (ya filtrados por Supabase) para ver qué marcas hay
+    finalResults.forEach(p => {
+      if (p.marca) brands.add(p.marca);
+      if (p.etiquetas) p.etiquetas.forEach(t => tags.add(t));
+    });
+    return {
+      availableBrands: Array.from(brands),
+      availableTags: Array.from(tags)
+    };
+  }, [finalResults]);
 
   const otherCategories = useMemo(() => {
     return categories.filter(c => c.id !== category?.id).slice(0, 4);

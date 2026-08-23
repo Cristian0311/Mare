@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { productService } from '../../services/products';
-import { Product } from '../../types';
+import { categoryService } from '../../services/categories';
+import { Product, Category } from '../../types';
 import { Search, Plus, Edit, Trash2, CheckCircle, XCircle, Package, MoreVertical, CheckSquare, Square, Tags, DollarSign, Image as ImageIcon, ChevronRight } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
@@ -10,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,18 +24,31 @@ export function AdminProducts() {
   const { success, error } = useToast();
 
   useEffect(() => {
-    loadProducts();
+    loadInitialData();
   }, []);
 
-  const loadProducts = async () => {
+  const loadInitialData = async () => {
     setIsLoading(true);
+    try {
+      const [productsData, categoriesData] = await Promise.all([
+        productService.getAllProducts(),
+        categoryService.getAllCategories(true)
+      ]);
+      setProducts(productsData);
+      setCategories(categoriesData);
+    } catch (err) {
+      error('Error', 'No se pudieron cargar los datos de Supabase');
+    }
+    setIsLoading(false);
+  };
+
+  const loadProducts = async () => {
     try {
       const data = await productService.getAllProducts();
       setProducts(data);
     } catch (err) {
-      error('Error', 'No se pudieron cargar los productos de Supabase');
+      error('Error', 'No se pudieron cargar los productos');
     }
-    setIsLoading(false);
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -289,6 +304,11 @@ export function AdminProducts() {
                   const isSelected = selectedProducts.includes(product.id);
                   const mainImage = product.imagenes && product.imagenes.length > 0 ? product.imagenes[0] : null;
 
+                  // Resolver nombre de categoría y subcategoría para visualización
+                  const cat = categories.find(c => c.id === product.categoria);
+                  const sub = cat?.subcategorias?.find(s => s.id === product.subcategoria);
+                  const categoryDisplay = cat ? (sub ? `${cat.nombre} > ${sub.nombre}` : cat.nombre) : 'Sin Categoría';
+
                   return (
                     <motion.tr 
                       layout
@@ -334,7 +354,7 @@ export function AdminProducts() {
                       </td>
                       <td className="p-5">
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                          {product.categoria || 'Sin Categoría'}
+                          {categoryDisplay}
                         </span>
                       </td>
                       <td className="p-5 text-right">

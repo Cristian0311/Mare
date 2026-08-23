@@ -101,20 +101,14 @@ export function Collection() {
       const options = {
         limit: 12,
         offset: isLoadMore ? paginatedResults.offset : 0,
-        sort: sortMap[sortOption] || 'newest'
+        sort: sortMap[sortOption] || 'newest',
+        collection: type as any // Pasamos el tipo de colección a Supabase
       };
 
-      // Add filter specific to collection type
-      // Note: For now we still use local filtering if needed, 
-      // but getPaginatedProducts can be extended for these types
-      
       const result = await productService.getPaginatedProducts(options);
       
-      // Post-fetch filtering for specific collection types that might not be in DB query yet
-      const filteredBatch = result.products.filter(collectionInfo.filter);
-
       setPaginatedResults(prev => ({
-        products: isLoadMore ? [...prev.products, ...filteredBatch] : filteredBatch,
+        products: isLoadMore ? [...prev.products, ...result.products] : result.products,
         total: result.total,
         hasMore: result.hasMore,
         offset: result.nextOffset

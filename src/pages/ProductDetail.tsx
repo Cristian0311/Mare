@@ -766,8 +766,7 @@ export function ProductDetail() {
                 <div>
                   <h4 className="text-[11px] font-black text-mare-navy uppercase tracking-widest mb-1">Envío a Domicilio</h4>
                   <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
-                    Entregas en <span className="font-bold text-mare-navy">La Habana</span> entre 24h y 72h hábiles.
-                    Envíos al resto del país coordinados vía WhatsApp.
+                    Entregas rápidas en <span className="font-bold text-mare-navy">La Habana</span> entre 24h y 72h hábiles.
                   </p>
                 </div>
               </div>
@@ -779,7 +778,7 @@ export function ProductDetail() {
                 <div>
                   <h4 className="text-[11px] font-black text-mare-navy uppercase tracking-widest mb-1">Confirmación Inmediata</h4>
                   <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
-                    Al finalizar su pedido, un asesor confirmará disponibilidad y coordinará el pago seguro por WhatsApp.
+                    Al finalizar su pedido, un asesor confirmará disponibilidad y coordinará los detalles finales por WhatsApp.
                   </p>
                 </div>
               </div>
@@ -793,29 +792,6 @@ export function ProductDetail() {
                   <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
                     Productos verificados y atención personalizada en cada etapa de su compra.
                   </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Zonas de Cobertura */}
-            <div className="pt-5 border-t border-dashed border-gray-100">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Cobertura Principal</span>
-                  <span className="flex items-center gap-1.5 text-[9px] font-black text-mare-green uppercase tracking-widest">
-                    <div className="w-1.5 h-1.5 rounded-full bg-mare-green animate-pulse"></div>
-                    Activa
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {['La Habana', 'Artemisa', 'Mayabeque'].map(prov => (
-                    <span key={prov} className="px-2.5 py-1 bg-gray-50 text-gray-600 rounded-lg text-[9px] font-bold border border-gray-100">
-                      {prov}
-                    </span>
-                  ))}
-                  <span className="px-2.5 py-1 bg-gray-50/50 text-gray-400 rounded-lg text-[9px] font-bold border border-dashed border-gray-200">
-                    Resto del país (Consultar)
-                  </span>
                 </div>
               </div>
             </div>

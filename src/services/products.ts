@@ -179,6 +179,10 @@ class ProductService {
     limit?: number;
     offset?: number;
     sort?: 'newest' | 'price-asc' | 'price-desc' | 'popular';
+    collection?: 'ofertas' | 'novedades' | 'destacados' | 'mayorista' | 'todos';
+    minPrice?: number;
+    maxPrice?: number;
+    brand?: string;
   } = {}): Promise<PaginatedProducts> {
     const { 
       category, 
@@ -187,7 +191,11 @@ class ProductService {
       search, 
       limit = 12, 
       offset = 0,
-      sort = 'newest'
+      sort = 'newest',
+      collection,
+      minPrice,
+      maxPrice,
+      brand
     } = options;
 
     let query = supabase
@@ -195,37 +203,49 @@ class ProductService {
       .select('*, categories(id, name, slug, parent_id), product_images(storage_path, is_primary, sort_order), wholesale_configs(*)', { count: 'exact' })
       .eq('status', 'active');
 
-    if (subcategoryId) {
-      // Find subcategory by id or slug
-      const catQuery = supabase.from('categories').select('id');
-      const { data: subcatData } = isUUID(subcategoryId)
-        ? await catQuery.eq('id', subcategoryId).maybeSingle()
-        : await catQuery.eq('slug', subcategoryId).maybeSingle();
+    // Filtros de Colección Directos en Supabase
+    if (collection === 'ofertas') {
+      query = query.gt('compare_at_price_cup', 0).filter('compare_at_price_cup', 'gt', 'price_cup');
+    } else if (collection === 'novedades') {
+      query = query.eq('is_new', true);
+    } else if (collection === 'destacados') {
+      query = query.eq('is_featured', true);
+    } else if (collection === 'mayorista') {
+      query = query.eq('product_type', 'wholesale');
+    }
 
-      const subId = subcatData ? subcatData.id : subcategoryId;
-      query = query.eq('category_id', subId);
+    // Filtros de Rango de Precio y Marca
+    if (minPrice !== undefined && minPrice !== null) {
+      query = query.gte('price_cup', minPrice);
+    }
+    if (maxPrice !== undefined && maxPrice !== null) {
+      query = query.lte('price_cup', maxPrice);
+    }
+    if (brand && brand !== '') {
+      query = query.ilike('brand', `%${brand}%`);
+    }
+
+    // Jerarquía de Categorías y Subcategorías
+    if (subcategoryId) {
+      // Si hay subcategoría, filtramos por ese ID específico (o slug)
+      if (isUUID(subcategoryId)) {
+        query = query.eq('category_id', subcategoryId);
+      } else {
+        const { data: subcatData } = await supabase.from('categories').select('id').eq('slug', subcategoryId).maybeSingle();
+        if (subcatData) query = query.eq('category_id', subcatData.id);
+      }
     } else if (category) {
-      // Try to find if category is a slug or ID
+      // Si solo hay categoría, buscamos productos de esa categoría O de cualquiera de sus subcategorías
       const catQuery = supabase.from('categories').select('id');
       const { data: catData } = isUUID(category)
         ? await catQuery.eq('id', category).maybeSingle()
         : await catQuery.eq('slug', category).maybeSingle();
       
       if (catData) {
-        // Also fetch all subcategories under this parent category
-        const { data: childSubcats } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('parent_id', catData.id);
-
-        const catIds = [catData.id, ...(childSubcats || []).map(c => c.id)];
-        if (catIds.length === 1) {
-          query = query.eq('category_id', catIds[0]);
-        } else {
-          query = query.in('category_id', catIds);
-        }
-      } else if (isUUID(category)) {
-        query = query.eq('category_id', category);
+        // Obtener IDs de todas las subcategorías
+        const { data: subcats } = await supabase.from('categories').select('id').eq('parent_id', catData.id);
+        const catIds = [catData.id, ...(subcats || []).map(s => s.id)];
+        query = query.in('category_id', catIds);
       }
     }
 
@@ -233,9 +253,26 @@ class ProductService {
       query = query.contains('tags', [tag]);
     }
 
-    if (search) {
-      // Búsqueda mejorada por nombre, descripción o etiquetas
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,tags.cs.{"${search}"}`);
+    // BUSCADOR REAL (Fase 7-12)
+    if (search && search.trim()) {
+      const cleanSearch = search.trim().toLowerCase();
+      
+      // Intentamos identificar si el usuario busca una categoría directamente
+      const { data: matchedCats } = await supabase
+        .from('categories')
+        .select('id')
+        .ilike('name', `%${cleanSearch}%`);
+      
+      const matchedCatIds = (matchedCats || []).map(c => c.id);
+
+      if (matchedCatIds.length > 0) {
+        // Si hay categorías que coinciden, buscamos productos con ese nombre O de esas categorías
+        query = query.or(`name.ilike.%${cleanSearch}%,category_id.in.(${matchedCatIds.join(',')}),tags.cs.{"${cleanSearch}"}`);
+      } else {
+        // Búsqueda estándar optimizada por relevancia (Nombre > Etiquetas > Descripción corta)
+        // Usamos tags.cs. para búsqueda exacta de etiqueta y name.ilike para parcial del nombre
+        query = query.or(`name.ilike.%${cleanSearch}%,tags.cs.{"${cleanSearch}"},description.ilike.%${cleanSearch}%`);
+      }
     }
 
     // Sorting
@@ -247,7 +284,7 @@ class ProductService {
         query = query.order('price_cup', { ascending: false });
         break;
       case 'popular':
-        query = query.order('views_count', { ascending: false });
+        query = query.order('is_featured', { ascending: false }).order('created_at', { ascending: false });
         break;
       case 'newest':
       default:
@@ -258,7 +295,10 @@ class ProductService {
     const { data, count, error } = await query
       .range(offset, offset + limit - 1);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase Query Error:', error);
+      throw error;
+    }
 
     const products = (data || []).map(p => this.mapSupabaseProduct(p));
     const total = count || 0;

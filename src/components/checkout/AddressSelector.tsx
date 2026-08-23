@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Store, Clock } from 'lucide-react';
 import { Select } from '../ui/Select';
 import { Input } from '../ui/Input';
 import { CheckoutData } from '../../hooks/useCheckoutForm';
 import { locationService } from '../../services/locations';
-import { Province, Municipality } from '../../data/cubaLocations';
+import { Province } from '../../data/cubaLocations';
+import { configService } from '../../services/config';
+
+interface PickupLocation {
+  id: string;
+  name: string;
+  address?: string;
+  schedule?: string;
+  active: boolean;
+}
 
 interface AddressSelectorProps {
   data: CheckoutData;
@@ -14,21 +23,52 @@ interface AddressSelectorProps {
 
 export function AddressSelector({ data, updateField, errors }: AddressSelectorProps) {
   const [provinces, setProvinces] = useState<Province[]>([]);
+  const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
   
   useEffect(() => {
     setProvinces(locationService.getProvincesSync());
     
-    const handleUpdate = () => {
+    const loadConfig = async () => {
+      const config = await configService.getConfig();
+      if (config.delivery?.pickupLocations) {
+        setPickupLocations(config.delivery.pickupLocations.filter((p: PickupLocation) => p.active !== false));
+      }
+    };
+    loadConfig();
+    
+    const handleLocationUpdate = () => {
       setProvinces(locationService.getProvincesSync());
     };
+
+    const handleConfigUpdate = () => {
+      const config = configService.getConfigSync();
+      if (config.delivery?.pickupLocations) {
+        setPickupLocations(config.delivery.pickupLocations.filter((p: PickupLocation) => p.active !== false));
+      }
+    };
     
-    window.addEventListener('mare_locations_updated', handleUpdate);
-    return () => window.removeEventListener('mare_locations_updated', handleUpdate);
+    window.addEventListener('mare_locations_updated', handleLocationUpdate);
+    window.addEventListener('mare_config_updated', handleConfigUpdate);
+    return () => {
+      window.removeEventListener('mare_locations_updated', handleLocationUpdate);
+      window.removeEventListener('mare_config_updated', handleConfigUpdate);
+    };
   }, []);
 
   const activeProvinces = provinces;
   const selectedProvince = provinces.find(p => p.id === data.provincia);
   const activeMunicipalities = selectedProvince?.municipios.filter(m => m.activo) || [];
+
+  const selectedPickupPoint = pickupLocations.find(p => p.name === data.puntoRecogida);
+
+  const pickupOptions = [
+    { value: '', label: 'Seleccionar punto de recogida...' },
+    ...pickupLocations.map(p => ({
+      value: p.name,
+      label: `${p.name}${p.schedule ? ` (${p.schedule})` : ''}`
+    })),
+    { value: 'pendiente', label: 'Pendiente de asignar (Se le contactará por WhatsApp)' }
+  ];
 
   return (
     <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
@@ -74,22 +114,34 @@ export function AddressSelector({ data, updateField, errors }: AddressSelectorPr
             </div>
           </div>
         ) : (
-          <div>
+          <div className="space-y-3">
             <Select
               label="Seleccionar Tienda / Punto de Recogida *"
               value={data.puntoRecogida}
               onChange={(e) => updateField('puntoRecogida', e.target.value)}
               error={errors.puntoRecogida}
-              options={[
-                { value: '', label: 'Seleccionar punto de recogida...' },
-                { value: 'Sede Central - La Habana', label: 'Sede Central - La Habana (L-V 9am-5pm)' },
-                { value: 'Almacén 1 - Plaza de la Rev.', label: 'Almacén 1 - Plaza de la Rev. (L-S 10am-6pm)' },
-                { value: 'Punto de Recogida - Playa', label: 'Punto de Recogida - Playa (L-V 11am-4pm)' },
-                { value: 'pendiente', label: 'Pendiente de asignar (Se le contactará por WhatsApp)' }
-              ]}
+              options={pickupOptions}
               className="rounded-xl text-sm font-bold"
             />
-            <p className="mt-2 text-[10px] font-bold text-gray-400 italic">
+
+            {selectedPickupPoint && (selectedPickupPoint.address || selectedPickupPoint.schedule) && (
+              <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-1.5 text-xs">
+                {selectedPickupPoint.address && (
+                  <div className="flex items-start gap-2 text-gray-700">
+                    <Store className="w-3.5 h-3.5 text-mare-navy shrink-0 mt-0.5" />
+                    <span className="font-bold">{selectedPickupPoint.address}</span>
+                  </div>
+                )}
+                {selectedPickupPoint.schedule && (
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Clock className="w-3.5 h-3.5 text-mare-blue shrink-0" />
+                    <span className="font-medium">{selectedPickupPoint.schedule}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <p className="text-[10px] font-bold text-gray-400 italic">
               * Eliges dónde recoger tu pedido sin costo adicional por envío.
             </p>
           </div>

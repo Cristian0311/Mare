@@ -42,7 +42,7 @@ const defaultFaqs = [
       {
         id: 'q6',
         title: '¿Los precios incluyen el envío?',
-        content: 'No, el costo de envío se calcula por separado según tu municipio de residencia y se añade al total de tu pedido al finalizarlo.'
+        content: 'No, el costo de envío se calcula por separado según tu municipio de residencia en La Habana y se añade al total de tu pedido al finalizarlo.'
       }
     ]
   },

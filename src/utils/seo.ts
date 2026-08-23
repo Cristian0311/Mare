@@ -59,7 +59,7 @@ export function generateOrganizationSchema() {
     "name": "MARÉ",
     "url": SITE_URL,
     "logo": `${SITE_URL}/icon-512.png`,
-    "description": "Tienda online líder en Cuba con envíos a todo el país."
+    "description": "Tienda online líder en La Habana, Cuba."
   };
 }
 

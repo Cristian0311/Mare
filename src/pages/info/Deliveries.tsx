@@ -1,23 +1,20 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { InfoBreadcrumbs } from '../../components/ui/InfoBreadcrumbs';
-import { Truck, MapPin, Clock, CreditCard, ChevronDown } from 'lucide-react';
+import { Truck, MapPin, Clock, CreditCard } from 'lucide-react';
 import { cubaLocations } from '../../data/cubaLocations';
 import { SEO } from '../../components/ui/SEO';
 
 export function Deliveries() {
-  const [selectedProvinceId, setSelectedProvinceId] = useState('la-habana');
-  
-  const activeProvinces = useMemo(() => cubaLocations.filter(p => p.activa), []);
   const selectedProvince = useMemo(() => 
-    cubaLocations.find(p => p.id === selectedProvinceId), 
-    [selectedProvinceId]
+    cubaLocations.find(p => p.id === 'la-habana'), 
+    []
   );
 
   return (
     <div className="animate-in fade-in duration-500 pb-12 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
       <SEO 
         title="Entregas y Envíos" 
-        description="Consulta las zonas de entrega, tarifas y tiempos de envío de MARÉ en Cuba."
+        description="Consulta las zonas de entrega, tarifas y tiempos de envío de MARÉ en La Habana."
       />
       <InfoBreadcrumbs items={[{ name: 'Entregas' }]} />
       
@@ -26,7 +23,7 @@ export function Deliveries() {
           Entregas y Envíos
         </h1>
         <p className="text-gray-500 font-medium">
-          En MARÉ nos esforzamos por que recibas tus productos de la manera más rápida y segura posible.
+          En MARÉ realizamos entregas rápidas y seguras en toda La Habana.
         </p>
       </header>
 
@@ -46,7 +43,7 @@ export function Deliveries() {
           </div>
           <h3 className="text-sm font-black text-mare-navy uppercase tracking-tight mb-2">Costos de envío</h3>
           <p className="text-xs text-gray-500 leading-relaxed">
-            Las tarifas varían según el municipio seleccionado. Puedes consultarlas en el buscador de abajo o en el proceso de checkout.
+            Las tarifas varían según el municipio de La Habana. Puedes consultarlas en la tabla de abajo o durante el proceso de checkout.
           </p>
         </div>
       </div>
@@ -54,30 +51,10 @@ export function Deliveries() {
       <section className="mb-12">
         <div className="flex items-center gap-3 mb-6">
           <MapPin className="h-6 w-6 text-mare-green" />
-          <h2 className="text-xl font-black text-mare-navy tracking-tight uppercase">Consultar Tarifas por Zona</h2>
+          <h2 className="text-xl font-black text-mare-navy tracking-tight uppercase">Tarifas por Municipio</h2>
         </div>
 
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-          <div className="mb-6">
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">
-              Seleccionar Provincia
-            </label>
-            <div className="relative">
-              <select 
-                value={selectedProvinceId}
-                onChange={(e) => setSelectedProvinceId(e.target.value)}
-                className="w-full h-12 pl-4 pr-10 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-mare-green transition-all font-bold text-sm appearance-none"
-              >
-                {cubaLocations.map(province => (
-                  <option key={province.id} value={province.id}>
-                    {province.nombre} {!province.activa && '(Próximamente)'}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-
           <div className="space-y-3">
             <div className="grid grid-cols-2 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
               <span>Municipio</span>

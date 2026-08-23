@@ -1,6 +1,6 @@
 {
   "name": "MARÉ",
-  "description": "Tu tienda oficial MARÉ en Cuba. Encuentra ofertas, categorías y los mejores productos con envíos a todo el país.",
+  "description": "Tu tienda oficial MARÉ en La Habana, Cuba. Encuentra ofertas, categorías y los mejores productos.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

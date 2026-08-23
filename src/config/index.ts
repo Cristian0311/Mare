@@ -71,7 +71,12 @@ export const appConfig = {
   delivery: {
     enabled: true,
     defaultCostMN: 500, // Costo base si no se especifica
-    freeDeliveryThresholdMN: null // null significa que no hay envío gratis por defecto
+    freeDeliveryThresholdMN: null, // null significa que no hay envío gratis por defecto
+    pickupLocations: [
+      { id: '1', name: 'Sede Central - La Habana', address: 'Calle 23 #456 e/ H e I, Vedado, La Habana', schedule: 'Lunes a Viernes (9:00 AM - 5:00 PM)', active: true },
+      { id: '2', name: 'Almacén 1 - Plaza de la Revolución', address: 'Ave. Paseo #102, Plaza de la Revolución, La Habana', schedule: 'Lunes a Sábado (10:00 AM - 6:00 PM)', active: true },
+      { id: '3', name: 'Punto de Recogida - Playa', address: 'Calle 5ta Ave #3002, Playa, La Habana', schedule: 'Lunes a Viernes (11:00 AM - 4:00 PM)', active: true }
+    ]
   },
   wholesale: {
     enabled: true,

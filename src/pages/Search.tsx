@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Box, ArrowLeft } from 'lucide-react';
 import { productService } from '../services/products';
-import { searchProducts } from '../utils/search';
+import { Product } from '../types';
 import { filterProducts, sortProducts, FilterOptions, SortOption } from '../utils/filters';
 import { ProductCard } from '../components/ui/ProductCard';
 import { ProductGrid } from '../components/ui/ProductGrid';
@@ -21,13 +21,13 @@ export function Search() {
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sortOption, setSortOption] = useState<SortOption>('recommended');
-  const [products, setProducts] = useState(productService.getProductsSync());
-
-  useEffect(() => {
-    const handleUpdate = () => setProducts(productService.getProductsSync());
-    window.addEventListener('mare_products_updated', handleUpdate);
-    return () => window.removeEventListener('mare_products_updated', handleUpdate);
-  }, []);
+  
+  const [products, setProducts] = useState<Product[]>([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
 
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     searchQuery: query
@@ -38,44 +38,67 @@ export function Search() {
     ? `Resultados de búsqueda para ${query} en MARÉ. Encuentra los mejores productos y ofertas en Cuba.`
     : 'Explora el catálogo completo de MARÉ. Categorías, ofertas y productos exclusivos en Cuba.';
 
-  // Base results from raw search (before filters applied)
-  const baseResults = useMemo(() => {
-    return query ? searchProducts(products, query) : [];
-  }, [query]);
+  const fetchProducts = async (isLoadMore = false) => {
+    if (isLoadMore) setIsLoadingMore(true);
+    else {
+      setIsLoading(true);
+    }
+
+    try {
+      const sortMap: Record<string, 'newest' | 'price-asc' | 'price-desc' | 'popular'> = {
+        'newest': 'newest',
+        'price-asc': 'price-asc',
+        'price-desc': 'price-desc',
+        'recommended': 'popular',
+        'featured': 'popular'
+      };
+
+      const result = await productService.getPaginatedProducts({
+        search: query,
+        limit: 12,
+        offset: isLoadMore ? offset : 0,
+        sort: sortMap[sortOption] || 'newest',
+        minPrice: filterOptions.minPrice,
+        maxPrice: filterOptions.maxPrice,
+        brand: filterOptions.brands?.[0], // Simplificamos a la primera marca por ahora
+        category: filterOptions.categoryId
+      });
+
+      if (isLoadMore) {
+        setProducts(prev => [...prev, ...result.products]);
+      } else {
+        setProducts(result.products);
+      }
+      
+      setTotalResults(result.total);
+      setHasMore(result.hasMore);
+      setOffset(result.nextOffset);
+    } catch (error) {
+      console.error('Error searching products:', error);
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  };
+
+  // Fetch products when search query, sort or filters change
+  useEffect(() => {
+    fetchProducts();
+  }, [query, sortOption, filterOptions.minPrice, filterOptions.maxPrice, filterOptions.brands, filterOptions.categoryId]);
 
   // Sync query when it changes in URL
   useEffect(() => {
     setFilterOptions(prev => ({ ...prev, searchQuery: query }));
   }, [query]);
 
-  // Derived available filters based on base search results
-  const { availableBrands, availableTags } = useMemo(() => {
-    const brands = new Set<string>();
-    const tags = new Set<string>();
-    baseResults.forEach(p => {
-      if (p.marca) brands.add(p.marca);
-      if (p.etiquetas) p.etiquetas.forEach(t => tags.add(t));
-    });
-    return {
-      availableBrands: Array.from(brands),
-      availableTags: Array.from(tags)
-    };
-  }, [baseResults]);
-
-  // Final filtered and sorted results
-  const finalResults = useMemo(() => {
-    // searchProducts handles sorting by relevance, but we want to apply standard filters
-    // So we run filterProducts on the base search results
-    const filtered = filterProducts(baseResults, filterOptions);
-    return sortProducts(filtered, sortOption);
-  }, [baseResults, filterOptions, sortOption]);
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [query]);
 
-  // Featured products for empty state
-  const featured = products.filter(p => p.destacado).slice(0, 4);
+  // Derived available filters (these could also be fetched from server in a real app)
+  // For now we keep them static or derived from a separate quick fetch if needed
+  const availableBrands = ['Nihao', 'Lg', 'Samsung', 'Mabe', 'Gree'];
+  const availableTags = ['Oferta', 'Nuevo', 'Garantía'];
 
   return (
     <div className="animate-in fade-in duration-500 pb-12">
@@ -107,23 +130,27 @@ export function Search() {
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* Sidebar */}
-        {baseResults.length > 0 && (
-          <FilterSidebar 
-            isOpen={isSidebarOpen}
-            onClose={() => setIsSidebarOpen(false)}
-            options={filterOptions}
-            onChange={setFilterOptions}
-            availableBrands={availableBrands}
-            availableTags={availableTags}
-          />
-        )}
+        <FilterSidebar 
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          options={filterOptions}
+          onChange={setFilterOptions}
+          availableBrands={availableBrands}
+          availableTags={availableTags}
+        />
 
         {/* Main Content */}
         <div className="flex-1 w-full min-w-0">
-          {baseResults.length > 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse rounded-3xl" />
+              ))}
+            </div>
+          ) : products.length > 0 ? (
             <>
               <FilterBar 
-                totalItems={finalResults.length}
+                totalItems={totalResults}
                 sortOption={sortOption}
                 onSortChange={setSortOption}
                 onOpenFilters={() => setIsSidebarOpen(true)}
@@ -136,23 +163,21 @@ export function Search() {
                 onChange={setFilterOptions}
               />
 
-              {finalResults.length > 0 ? (
-                <ProductGrid>
-                  {finalResults.map(p => (
-                    <ProductCard key={p.id} product={p} highlight={query} />
-                  ))}
-                </ProductGrid>
-              ) : (
-                <div className="bg-white rounded-3xl p-8 text-center border border-gray-100 shadow-sm flex flex-col items-center">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                    <Box className="w-8 h-8 text-gray-300" />
-                  </div>
-                  <h3 className="text-lg font-bold text-mare-navy mb-2">No hay resultados con estos filtros</h3>
-                  <p className="text-gray-500 mb-6 text-sm">
-                    Intenta cambiar o limpiar los filtros seleccionados para ver más productos.
-                  </p>
-                  <Button onClick={() => setFilterOptions({ searchQuery: query })} variant="outline">
-                    Limpiar filtros
+              <ProductGrid>
+                {products.map(p => (
+                  <ProductCard key={p.id} product={p} highlight={query} />
+                ))}
+              </ProductGrid>
+
+              {hasMore && (
+                <div className="mt-12 flex justify-center">
+                  <Button 
+                    onClick={() => fetchProducts(true)} 
+                    isLoading={isLoadingMore}
+                    variant="outline"
+                    className="px-8 rounded-full"
+                  >
+                    Cargar más resultados
                   </Button>
                 </div>
               )}
@@ -164,16 +189,16 @@ export function Search() {
                   <Box className="w-10 h-10 text-gray-300" />
                 </div>
                 {query ? (
-    <>
-      <h2 className="text-xl font-bold text-mare-navy mb-3">No encontramos productos relacionados con tu búsqueda.</h2>
-      <p className="text-gray-500 mb-8 max-w-md mx-auto">Revisa si hay algún error de escritura o intenta usar palabras más generales para encontrar lo que buscas.</p>
-    </>
-  ) : (
-    <>
-      <h2 className="text-xl font-bold text-mare-navy mb-3">¿Qué estás buscando?</h2>
-      <p className="text-gray-500 mb-8 max-w-md mx-auto">Explora nuestro catálogo utilizando el buscador, o navega por nuestras categorías.</p>
-    </>
-  )}
+                  <>
+                    <h2 className="text-xl font-bold text-mare-navy mb-3">No encontramos productos relacionados con tu búsqueda.</h2>
+                    <p className="text-gray-500 mb-8 max-w-md mx-auto">Revisa si hay algún error de escritura o intenta usar palabras más generales para encontrar lo que buscas.</p>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-xl font-bold text-mare-navy mb-3">¿Qué estás buscando?</h2>
+                    <p className="text-gray-500 mb-8 max-w-md mx-auto">Explora nuestro catálogo utilizando el buscador, o navega por nuestras categorías.</p>
+                  </>
+                )}
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button onClick={() => navigate('/categorias')} variant="outline">
                     Explorar categorías
@@ -182,15 +207,6 @@ export function Search() {
                     Ver inicio
                   </Button>
                 </div>
-              </div>
-
-              <div className="w-full">
-                <h3 className="text-xl font-bold text-mare-navy mb-6">Productos destacados</h3>
-                <ProductGrid>
-                  {featured.map(p => (
-                    <ProductCard key={p.id} product={p} />
-                  ))}
-                </ProductGrid>
               </div>
             </div>
           )}
