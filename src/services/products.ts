@@ -421,9 +421,7 @@ class ProductService {
       low_stock_threshold: product.low_stock_threshold || 5,
       sku: product.sku || null,
       // Sincronización estricta de disponibilidad
-      availability_status: (product.disponibilidad === 'agotado' || product.availability_status === 'out_of_stock') 
-        ? 'out_of_stock' 
-        : 'available',
+      availability_status: product.disponibilidad === 'agotado' ? 'out_of_stock' : 'available',
       sort_order: product.orden || 0,
       opciones_variantes: product.opcionesVariantes || [],
       variantes: product.variantes || []
@@ -557,9 +555,7 @@ class ProductService {
       low_stock_threshold: product.low_stock_threshold || 5,
       sku: product.sku || null,
       // Sincronización estricta de disponibilidad
-      availability_status: (product.disponibilidad === 'agotado' || product.availability_status === 'out_of_stock') 
-        ? 'out_of_stock' 
-        : 'available',
+      availability_status: product.disponibilidad === 'agotado' ? 'out_of_stock' : 'available',
       sort_order: product.orden || 0,
       opciones_variantes: product.opcionesVariantes || [],
       variantes: product.variantes || []

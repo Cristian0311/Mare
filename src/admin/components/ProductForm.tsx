@@ -44,6 +44,7 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
       imagenes: [],
       etiquetas: [],
       disponibilidad: 'disponible',
+      availability_status: 'available',
       activo: true,
       stock: 0,
       sku: '',

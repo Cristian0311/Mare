@@ -69,9 +69,28 @@ export function Home() {
   }, []);
 
   const ofertas = useMemo(() => getPromotionalProducts(), [productsVersion]);
-  const recienLlegados = useMemo(() => getRecentProducts(), [productsVersion]);
-  const recomendados = useMemo(() => getBestSellers(), [productsVersion]);
   const destacados = useMemo(() => getFeaturedProducts(), [productsVersion]);
+  
+  // Lógica de deduplicación: Los productos no se repiten en secciones, excepto los mayoristas
+  const recienLlegados = useMemo(() => {
+    const items = getRecentProducts();
+    const excludeIds = new Set([
+      ...ofertas.map(p => p.id),
+      ...destacados.map(p => p.id)
+    ]);
+    return items.filter(p => p.ventaMayorista?.habilitada || !excludeIds.has(p.id));
+  }, [ofertas, destacados, productsVersion]);
+
+  const recomendados = useMemo(() => {
+    const items = getBestSellers();
+    const excludeIds = new Set([
+      ...ofertas.map(p => p.id),
+      ...destacados.map(p => p.id),
+      ...recienLlegados.map(p => p.id)
+    ]);
+    return items.filter(p => p.ventaMayorista?.habilitada || !excludeIds.has(p.id));
+  }, [ofertas, destacados, recienLlegados, productsVersion]);
+
   const mayorista = useMemo(() => getWholesaleProducts(), [productsVersion]);
   const todosLosProductos = useMemo(() => getAllPublicProducts(), [productsVersion]);
 
