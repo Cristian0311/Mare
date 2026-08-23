@@ -426,9 +426,10 @@ class ProductService {
       .select();
 
     // If error due to missing jsonb columns (before schema migration execution), retry without variant jsonb fields
-    if (prodError && (prodError.message?.includes('opciones_variantes') || prodError.message?.includes('variantes'))) {
+    if (prodError && (prodError.message?.includes('opciones_variantes') || prodError.message?.includes('variantes') || prodError.message?.includes('tags'))) {
       delete insertPayload.opciones_variantes;
       delete insertPayload.variantes;
+      delete insertPayload.tags;
       const retry = await supabase
         .from('products')
         .insert(insertPayload)
@@ -549,9 +550,10 @@ class ProductService {
       .eq('id', product.id);
 
     // Fallback if missing column before migration
-    if (prodError && (prodError.message?.includes('opciones_variantes') || prodError.message?.includes('variantes'))) {
+    if (prodError && (prodError.message?.includes('opciones_variantes') || prodError.message?.includes('variantes') || prodError.message?.includes('tags'))) {
       delete updatePayload.opciones_variantes;
       delete updatePayload.variantes;
+      delete updatePayload.tags;
       const retry = await supabase
         .from('products')
         .update(updatePayload)
