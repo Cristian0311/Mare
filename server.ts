@@ -4,11 +4,18 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
+import cron from "node-cron";
+import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
 
-let aiClient: GoogleGenAI | null = null;
+// Configuración de Supabase
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || ''; // Usamos la anon key (Asegúrate de que RLS permita updates a los productos desde el servidor, o configura SUPABASE_SERVICE_ROLE_KEY en Render)
+const supabaseRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseKey; 
+const supabase = createClient(supabaseUrl, supabaseRoleKey);
 
+let aiClient: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI {
   if (!aiClient) {
     aiClient = new GoogleGenAI({ 
@@ -22,6 +29,70 @@ function getGeminiClient(): GoogleGenAI {
   }
   return aiClient;
 }
+
+// ============================================================================
+// TAREAS EN SEGUNDO PLANO (CRON JOBS)
+// ============================================================================
+// Se ejecuta todos los días a las 3:00 AM para rotar el catálogo (Destacados)
+cron.schedule('0 3 * * *', async () => {
+  console.log("Iniciando rotación automática del catálogo por IA (CRON)...");
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      console.log("CRON Omitido: GEMINI_API_KEY no configurado");
+      return;
+    }
+    
+    // Obtener productos activos
+    const { data: products, error } = await supabase
+      .from('products')
+      .select('id, name, description, stock_quantity, views_count, price_cup')
+      .eq('status', 'active')
+      .eq('available', true);
+      
+    if (error || !products || products.length === 0) {
+      console.log("CRON Omitido: No se pudieron obtener los productos o no hay productos.");
+      return;
+    }
+
+    const prompt = `
+      Eres el gerente de e-commerce de la tienda MARÉ.
+      Aquí tienes la lista actual de productos activos de la tienda:
+      ${JSON.stringify(products)}
+      
+      Tu tarea es analizar el stock, las vistas (views_count) y el precio, y seleccionar EXACTAMENTE 8 productos para marcar como "Destacados" (is_featured = true) hoy.
+      Criterios: 
+      - Prioriza productos con buenas vistas o precios atractivos.
+      - Si hay poco stock (pero mayor a 0), puede ser un buen gancho.
+      
+      Devuelve SOLO un JSON Array de strings con los IDs de los 8 productos seleccionados.
+    `;
+
+    const ai = getGeminiClient();
+    const response = await ai.models.generateContent({
+      model: "gemini-3.7-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      }
+    });
+
+    const selectedIds: string[] = JSON.parse(response.text || "[]");
+    
+    if (selectedIds.length > 0) {
+      // 1. Quitar destacado a todos
+      await supabase.from('products').update({ destacado: false }).neq('id', '00000000-0000-0000-0000-000000000000');
+      // 2. Poner destacado a los seleccionados
+      await supabase.from('products').update({ destacado: true }).in('id', selectedIds);
+      console.log(`Rotación de catálogo exitosa. ${selectedIds.length} productos destacados actualizados.`);
+    }
+  } catch (err) {
+    console.error("Error en el cron de rotación:", err);
+  }
+});
 
 async function startServer() {
   const app = express();
@@ -42,6 +113,30 @@ async function startServer() {
       console.error("Failed to append to browser_errors.log:", e);
     }
     res.send("ok"); 
+  });
+
+  // Generador de Vectores (Embeddings) para Búsqueda Semántica
+  app.post("/api/ai/embeddings", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ error: "Texto requerido" });
+      }
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "GEMINI_API_KEY no configurado" });
+      }
+
+      const ai = getGeminiClient();
+      const response = await ai.models.embedContent({
+        model: "text-embedding-004",
+        contents: text,
+      });
+
+      res.json({ embedding: response.embeddings?.[0]?.values || [] });
+    } catch (error: any) {
+      console.error("Gemini Error (Embeddings):", error);
+      res.status(500).json({ error: error.message });
+    }
   });
 
   // AI Recommendation Route

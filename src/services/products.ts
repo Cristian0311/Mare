@@ -297,9 +297,36 @@ class ProductService {
       query = query.contains('tags', [tag]);
     }
 
-    // BUSCADOR REAL (Fase 7-12)
+    // BUSCADOR REAL (Fase 7-12) & SEMÁNTICO (Vectores IA)
     if (search && search.trim()) {
       const cleanSearch = search.trim().toLowerCase();
+      let matchedSemanticIds: string[] = [];
+
+      try {
+        // Intentar búsqueda semántica llamando a nuestro backend
+        const embedRes = await fetch('/api/ai/embeddings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: cleanSearch })
+        });
+        
+        if (embedRes.ok) {
+          const { embedding } = await embedRes.json();
+          if (embedding && embedding.length > 0) {
+            // Buscamos productos similares usando la función pgvector de Supabase
+            const { data: semData, error: semErr } = await supabase.rpc('match_products', {
+              query_embedding: embedding,
+              match_threshold: 0.3, // Umbral para coincidencia
+              match_count: 20
+            });
+            if (!semErr && semData) {
+              matchedSemanticIds = semData.map((d: any) => d.id);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Semantic search fallback:', e);
+      }
       
       // Intentamos identificar si el usuario busca una categoría directamente
       const { data: matchedCats } = await supabase
@@ -309,14 +336,21 @@ class ProductService {
       
       const matchedCatIds = (matchedCats || []).map(c => c.id);
 
+      let orClauses = [
+        `name.ilike.%${cleanSearch}%`,
+        `tags.cs.{"${cleanSearch}"}`,
+        `description.ilike.%${cleanSearch}%`
+      ];
+
       if (matchedCatIds.length > 0) {
-        // Si hay categorías que coinciden, buscamos productos con ese nombre O de esas categorías
-        query = query.or(`name.ilike.%${cleanSearch}%,category_id.in.(${matchedCatIds.join(',')}),tags.cs.{"${cleanSearch}"}`);
-      } else {
-        // Búsqueda estándar optimizada por relevancia (Nombre > Etiquetas > Descripción corta)
-        // Usamos tags.cs. para búsqueda exacta de etiqueta y name.ilike para parcial del nombre
-        query = query.or(`name.ilike.%${cleanSearch}%,tags.cs.{"${cleanSearch}"},description.ilike.%${cleanSearch}%`);
+        orClauses.push(`category_id.in.(${matchedCatIds.join(',')})`);
       }
+      
+      if (matchedSemanticIds.length > 0) {
+        orClauses.push(`id.in.(${matchedSemanticIds.join(',')})`);
+      }
+      
+      query = query.or(orClauses.join(','));
     }
 
     // Sorting
