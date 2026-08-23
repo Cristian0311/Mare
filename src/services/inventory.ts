@@ -63,15 +63,15 @@ export class InventoryService {
   async getInventoryStats() {
     const { data, error } = await supabase
       .from('products')
-      .select('availability_status, stock_tracking, stock_quantity, reserved_quantity');
+      .select('available, availability_status, stock_tracking, stock_quantity, reserved_quantity');
 
     if (error) throw error;
 
     const stats = {
       total_products: data.length,
-      available: data.filter(p => p.availability_status === 'available').length,
+      available: data.filter(p => p.available === true).length,
       low_stock: data.filter(p => p.availability_status === 'low_stock').length,
-      out_of_stock: data.filter(p => p.availability_status === 'out_of_stock').length,
+      out_of_stock: data.filter(p => p.available === false).length,
       on_order: data.filter(p => p.availability_status === 'on_order').length,
       reserved_total: data.reduce((sum, p) => sum + (p.reserved_quantity || 0), 0)
     };

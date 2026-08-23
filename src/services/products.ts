@@ -54,7 +54,8 @@ class ProductService {
     }
     return defaultProducts.map(p => ({
       ...p,
-      activo: p.activo !== undefined ? p.activo : true
+      activo: p.activo !== undefined ? p.activo : true,
+      available: p.available !== undefined ? p.available : (p.disponibilidad !== 'agotado')
     }));
   }
 
@@ -144,8 +145,9 @@ class ProductService {
       categoriaNombre: dbProduct.categories?.name,
       etiquetas: Array.isArray(dbProduct.tags) ? dbProduct.tags : [],
       estado: 'nuevo',
-      // Sincronización robusta de disponibilidad
-      disponibilidad: (dbProduct.availability_status === 'out_of_stock' || dbProduct.availability_status === 'agotado' || dbProduct.disponibilidad === 'agotado') ? 'agotado' : 'disponible',
+      // Fuente única de verdad para disponibilidad (Manual)
+      available: dbProduct.available !== false,
+      disponibilidad: dbProduct.available === false ? 'agotado' : 'disponible',
       nuevo: dbProduct.is_new || false,
       oferta: dbProduct.compare_at_price_cup > dbProduct.price_cup,
       destacado: dbProduct.is_featured || false,
@@ -397,9 +399,6 @@ class ProductService {
     let product_type = 'retail';
     if (product.ventaMayorista?.habilitada) product_type = 'wholesale';
 
-    let stock = null;
-    if (product.disponibilidad === 'agotado') stock = 0;
-
     // Prepare payload
     const insertPayload: any = {
       name: product.nombre,
@@ -420,8 +419,9 @@ class ProductService {
       stock_quantity: product.stock_quantity || 0,
       low_stock_threshold: product.low_stock_threshold || 5,
       sku: product.sku || null,
-      // Sincronización estricta de disponibilidad
-      availability_status: product.disponibilidad === 'agotado' ? 'out_of_stock' : 'available',
+      // Sincronización de disponibilidad manual (Fuente Única de Verdad)
+      available: product.available !== false,
+      availability_status: product.available === false ? 'out_of_stock' : 'available',
       sort_order: product.orden || 0,
       opciones_variantes: product.opcionesVariantes || [],
       variantes: product.variantes || []
@@ -539,9 +539,6 @@ class ProductService {
     let product_type = 'retail';
     if (product.ventaMayorista?.habilitada) product_type = 'wholesale';
 
-    let stock = null;
-    if (product.disponibilidad === 'agotado') stock = 0;
-
     const updatePayload: any = {
       name: product.nombre,
       description: product.descripcionCompleta || product.descripcionCorta,
@@ -560,8 +557,9 @@ class ProductService {
       stock_quantity: product.stock_quantity || 0,
       low_stock_threshold: product.low_stock_threshold || 5,
       sku: product.sku || null,
-      // Sincronización estricta de disponibilidad
-      availability_status: product.disponibilidad === 'agotado' ? 'out_of_stock' : 'available',
+      // Sincronización de disponibilidad manual (Fuente Única de Verdad)
+      available: product.available !== false,
+      availability_status: product.available === false ? 'out_of_stock' : 'available',
       sort_order: product.orden || 0,
       opciones_variantes: product.opcionesVariantes || [],
       variantes: product.variantes || []

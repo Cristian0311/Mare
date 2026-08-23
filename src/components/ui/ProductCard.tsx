@@ -51,10 +51,8 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
   const favorite = isFavorite(product.id);
   const rating = getProductRating(product.id || product.nombre);
 
-  // Use availability_status if available, fallback to legacy disponibilidad
-  const availKey = (product.availability_status === 'out_of_stock' || product.disponibilidad === 'agotado') 
-    ? 'agotado' 
-    : 'disponible';
+  // Use available boolean as single source of truth
+  const availKey = product.available === false ? 'agotado' : 'disponible';
   
   let avail;
   if (availKey === 'agotado') {

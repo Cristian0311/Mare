@@ -43,7 +43,8 @@ export const filterProducts = (products: Product[], options: FilterOptions): Pro
     }
     
     if (options.disponibilidad && options.disponibilidad.length > 0) {
-      if (!options.disponibilidad.includes(product.disponibilidad)) return false;
+      const currentStatus = product.available === false ? 'agotado' : 'disponible';
+      if (!options.disponibilidad.includes(currentStatus)) return false;
     }
     
     const finalPrice = getProductPricing(product).finalPrice;

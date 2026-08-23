@@ -51,7 +51,7 @@ export function AdminInventory() {
       // Enhance products with inventory data
       const enrichedProducts = products.map(p => ({
         ...p,
-        available: p.stock_tracking ? (p.stock_quantity || 0) : null
+        stockAvailable: p.stock_tracking ? (p.stock_quantity || 0) : null
       }));
 
       setItems(enrichedProducts);
@@ -85,7 +85,7 @@ export function AdminInventory() {
                           (item.sku && item.sku.toLowerCase().includes(searchTerm.toLowerCase()));
     
     if (statusFilter === 'low_stock') return matchesSearch && item.availability_status === 'low_stock';
-    if (statusFilter === 'out_of_stock') return matchesSearch && item.availability_status === 'out_of_stock';
+    if (statusFilter === 'out_of_stock') return matchesSearch && item.available === false;
     if (statusFilter === 'tracking') return matchesSearch && item.stock_tracking;
     
     return matchesSearch;
@@ -260,8 +260,8 @@ export function AdminInventory() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         {item.stock_tracking ? (
-                          <span className={`font-black ${item.available <= 0 ? 'text-red-500' : item.available <= item.low_stock_threshold ? 'text-amber-500' : 'text-green-600'}`}>
-                            {item.available}
+                          <span className={`font-black ${item.stockAvailable <= 0 ? 'text-red-500' : item.stockAvailable <= item.low_stock_threshold ? 'text-amber-500' : 'text-green-600'}`}>
+                            {item.stockAvailable}
                           </span>
                         ) : (
                           <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">Activo</span>
@@ -269,14 +269,9 @@ export function AdminInventory() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                          item.availability_status === 'available' ? 'bg-green-100 text-green-700' :
-                          item.availability_status === 'low_stock' ? 'bg-amber-100 text-amber-700' :
-                          item.availability_status === 'out_of_stock' ? 'bg-red-100 text-red-700' :
-                          'bg-gray-100 text-gray-500'
+                          item.available !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                         }`}>
-                          {item.availability_status === 'available' ? 'Stock OK' :
-                           item.availability_status === 'low_stock' ? 'Bajo' :
-                           item.availability_status === 'out_of_stock' ? 'Agotado' : 'Manual'}
+                          {item.available !== false ? 'Disponible' : 'Agotado'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">

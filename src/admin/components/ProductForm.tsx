@@ -31,6 +31,7 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
     if (product) {
       setFormData({
         ...product,
+        available: product.available !== false,
         subcategoria: product.subcategoria || '',
         etiquetas: Array.isArray(product.etiquetas) ? product.etiquetas : []
       });
@@ -48,6 +49,7 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
       subcategoria: '',
       imagenes: [],
       etiquetas: [],
+      available: true,
       disponibilidad: 'disponible',
       availability_status: 'available',
       activo: true,
@@ -88,11 +90,13 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
   };
 
   const handleAvailSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value as any;
+    const val = e.target.value;
+    const isAvailable = val === 'disponible';
     setFormData(prev => ({ 
       ...prev, 
-      disponibilidad: value,
-      availability_status: value === 'agotado' ? 'out_of_stock' : 'available'
+      available: isAvailable,
+      disponibilidad: isAvailable ? 'disponible' : 'agotado',
+      availability_status: isAvailable ? 'available' : 'out_of_stock'
     }));
   };
 
@@ -451,7 +455,7 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
               <InfoTrigger title="Estado del Inventario" text="Indica si el producto está disponible para la venta inmediata o si se ha agotado." />
             </label>
             <select 
-              value={formData.disponibilidad || 'disponible'}
+              value={formData.available === false ? 'agotado' : 'disponible'}
               onChange={handleAvailSelectChange}
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-mare-navy focus:ring-2 focus:ring-mare-turquoise/20 focus:border-mare-turquoise outline-none transition-all bg-white mb-2 max-w-full"
             >
@@ -460,7 +464,7 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
               ))}
             </select>
             
-            {formData.disponibilidad === 'disponible' && (
+            {formData.available !== false && (
               <div className="p-3 bg-mare-turquoise/5 rounded-xl border border-mare-turquoise/10 flex items-start gap-2.5">
                 <AlertCircle className="w-3.5 h-3.5 text-mare-turquoise shrink-0 mt-0.5" />
                 <p className="text-[9px] font-bold text-mare-turquoise uppercase tracking-wider leading-relaxed">

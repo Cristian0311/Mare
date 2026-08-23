@@ -18,6 +18,7 @@ export interface Product {
   etiquetas: string[];
   estado?: 'nuevo' | 'usado' | 'reacondicionado';
   disponibilidad: ProductAvailability;
+  available: boolean;
   marca?: string;
   modelo?: string;
   peso?: string;

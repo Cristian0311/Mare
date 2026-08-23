@@ -132,7 +132,7 @@ export function Cart() {
             <AnimatePresence mode="popLayout">
               {items.map((item, index) => {
                 const itemId = getCartItemId(item);
-                const isItemAvailable = item.disponibilidad !== 'agotado';
+                const isItemAvailable = item.available !== false;
                 const fav = isFavorite(item.id);
                 const pricing = getBestPrice(item, item.quantity, !!item.isWholesale);
                 
