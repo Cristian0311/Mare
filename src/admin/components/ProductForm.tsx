@@ -402,51 +402,87 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
           Precios e Inventario
         </h3>
         
+        {/* Toggle Solo Mayorista */}
+        <div className="flex items-center p-4 bg-amber-500/10 rounded-xl border border-amber-500/20 mb-2">
+          <input 
+            type="checkbox" 
+            id="only-wholesale"
+            checked={formData.precioMN === 0 && formData.ventaMayorista?.habilitada === true}
+            onChange={(e) => {
+              const isChecked = e.target.checked;
+              if (isChecked) {
+                setFormData(prev => ({
+                  ...prev,
+                  precioMN: 0,
+                  precioAnteriorMN: undefined,
+                  ventaMayorista: {
+                    habilitada: true,
+                    presentacion: prev.ventaMayorista?.presentacion || 'Unidad',
+                    cantidadMinima: prev.ventaMayorista?.cantidadMinima || 10,
+                    unidadesPorPresentacion: prev.ventaMayorista?.unidadesPorPresentacion || 1,
+                    precioMN: prev.ventaMayorista?.precioMN || 0
+                  }
+                }));
+              } else {
+                setFormData(prev => ({ ...prev, precioMN: prev.ventaMayorista?.precioMN || 100 }));
+              }
+            }}
+            className="w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-500 cursor-pointer"
+          />
+          <label htmlFor="only-wholesale" className="ml-3 text-xs font-black text-amber-700 flex flex-wrap items-center gap-2 cursor-pointer">
+            VENDER SOLO AL POR MAYOR (DESACTIVA VENTA AL DETALLE)
+          </label>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-w-0">
-          <div className="min-w-0">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center flex-wrap gap-1">
-              Precio Principal (CUP)
-              <InfoTrigger title="Precio Real" text="El valor en CUP al que se venderá el producto." />
-            </label>
-            <div className="relative min-w-0">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-black">$</span>
-              <input 
-                type="number" 
-                name="precioMN"
-                required
-                min="0"
-                step="1"
-                value={formData.precioMN}
-                onChange={handleChange}
-                className="w-full border border-gray-200 rounded-xl pl-8 pr-4 py-3 text-sm font-mono font-black text-mare-navy focus:ring-2 focus:ring-mare-turquoise/20 focus:border-mare-turquoise outline-none transition-all"
-              />
-            </div>
-          </div>
-          
-          <div className="min-w-0">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center flex-wrap gap-1">
-              Precio Anterior (CUP)
-              <InfoTrigger title="Oferta o Descuento" text="Si llenas esto con un valor superior al precio principal, se calculará y mostrará un globo de oferta." />
-            </label>
-            <div className="relative min-w-0">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-black">$</span>
-              <input 
-                type="number" 
-                name="precioAnteriorMN"
-                min="0"
-                step="1"
-                value={formData.precioAnteriorMN || ''}
-                onChange={handleChange}
-                className="w-full border border-gray-200 rounded-xl pl-8 pr-4 py-3 text-sm font-mono text-gray-500 focus:ring-2 focus:ring-mare-turquoise/20 focus:border-mare-turquoise outline-none transition-all"
-                placeholder="Opcional"
-              />
-            </div>
-            {formData.precioAnteriorMN && formData.precioMN && formData.precioAnteriorMN > formData.precioMN && (
-              <p className="text-[10px] font-bold text-green-500 uppercase tracking-widest mt-2 break-words">
-                Descuento Activo: {Math.round((1 - formData.precioMN / formData.precioAnteriorMN) * 100)}%
-              </p>
-            )}
-          </div>
+          {!(formData.precioMN === 0 && formData.ventaMayorista?.habilitada === true) && (
+            <>
+              <div className="min-w-0">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center flex-wrap gap-1">
+                  Precio Principal (CUP)
+                  <InfoTrigger title="Precio Real" text="El valor en CUP al que se venderá el producto." />
+                </label>
+                <div className="relative min-w-0">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-black">$</span>
+                  <input 
+                    type="number" 
+                    name="precioMN"
+                    required={!(formData.precioMN === 0 && formData.ventaMayorista?.habilitada === true)}
+                    min="0"
+                    step="1"
+                    value={formData.precioMN}
+                    onChange={handleChange}
+                    className="w-full border border-gray-200 rounded-xl pl-8 pr-4 py-3 text-sm font-mono font-black text-mare-navy focus:ring-2 focus:ring-mare-turquoise/20 focus:border-mare-turquoise outline-none transition-all"
+                  />
+                </div>
+              </div>
+              
+              <div className="min-w-0">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center flex-wrap gap-1">
+                  Precio Anterior (CUP)
+                  <InfoTrigger title="Oferta o Descuento" text="Si llenas esto con un valor superior al precio principal, se calculará y mostrará un globo de oferta." />
+                </label>
+                <div className="relative min-w-0">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-black">$</span>
+                  <input 
+                    type="number" 
+                    name="precioAnteriorMN"
+                    min="0"
+                    step="1"
+                    value={formData.precioAnteriorMN || ''}
+                    onChange={handleChange}
+                    className="w-full border border-gray-200 rounded-xl pl-8 pr-4 py-3 text-sm font-mono text-gray-500 focus:ring-2 focus:ring-mare-turquoise/20 focus:border-mare-turquoise outline-none transition-all"
+                    placeholder="Opcional"
+                  />
+                </div>
+                {formData.precioAnteriorMN && formData.precioMN && formData.precioAnteriorMN > formData.precioMN ? (
+                  <p className="text-[10px] font-bold text-green-500 uppercase tracking-widest mt-2 break-words">
+                    Descuento Activo: {Math.round((1 - formData.precioMN / formData.precioAnteriorMN) * 100)}%
+                  </p>
+                ) : null}
+              </div>
+            </>
+          )}
 
           {/* Disponibilidad Flexible */}
           <div className="min-w-0">
@@ -508,10 +544,11 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
 
         {/* Wholesale Section */}
         <div className="pt-4 border-t border-gray-100 min-w-0">
-          <label className="flex items-center mb-4 cursor-pointer">
+          <label className={`flex items-center mb-4 ${formData.precioMN === 0 && formData.ventaMayorista?.habilitada === true ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
             <input 
               type="checkbox"
               checked={formData.ventaMayorista?.habilitada || false}
+              disabled={formData.precioMN === 0 && formData.ventaMayorista?.habilitada === true}
               onChange={(e) => setFormData(prev => ({
                 ...prev,
                 ventaMayorista: {
@@ -528,6 +565,9 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
               Habilitar Venta Mayorista
               <InfoTrigger title="Mayorista" text="Permite vender este producto al por mayor con un precio especial." />
             </span>
+            {formData.precioMN === 0 && formData.ventaMayorista?.habilitada === true && (
+              <span className="ml-2 text-[8px] text-amber-600 uppercase font-bold tracking-widest">(Bloqueado por "Solo Venta Mayorista")</span>
+            )}
           </label>
 
           {formData.ventaMayorista?.habilitada && (
