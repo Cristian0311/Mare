@@ -92,7 +92,7 @@ export function generateWhatsAppMessage(
         : getProductPricing(item as any, item.quantity, isWholesale, activePromos);
 
       const unitPrice = pricing.finalPrice;
-      const unitsPerPresentacion = isWholesale ? item.ventaMayorista?.unidadesPorPresentacion || 1 : 1;
+      const unitsPerPresentacion = isWholesale ? (item.ventaMayorista!.presentacion === 'Unidad' ? 1 : (item.ventaMayorista?.unidadesPorPresentacion || 1)) : 1;
       
       const totalUnits = item.quantity * unitsPerPresentacion;
       const itemSubtotal = unitPrice * totalUnits;

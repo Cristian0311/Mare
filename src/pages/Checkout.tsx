@@ -45,7 +45,7 @@ export function Checkout() {
     const pricing = getBestPrice(item, item.quantity, !!item.isWholesale);
     const price = pricing.finalPrice;
     const finalPrice = price;
-    const unitsPerPresentacion = (item.isWholesale && item.ventaMayorista) ? item.ventaMayorista.unidadesPorPresentacion || 1 : 1;
+    const unitsPerPresentacion = (item.isWholesale && item.ventaMayorista) ? (item.ventaMayorista.presentacion === 'Unidad' ? 1 : (item.ventaMayorista.unidadesPorPresentacion || 1)) : 1;
     return acc + (finalPrice * item.quantity * unitsPerPresentacion);
   }, 0);
 

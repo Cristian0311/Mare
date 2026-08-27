@@ -100,7 +100,7 @@ export function ProductDetail() {
   const displayPrice = pricing?.finalPrice || 0;
 
   const totalUnits = (isWholesale && product?.ventaMayorista?.unidadesPorPresentacion)
-    ? quantity * product.ventaMayorista.unidadesPorPresentacion
+    ? quantity * (product.ventaMayorista.presentacion === 'Unidad' ? 1 : product.ventaMayorista.unidadesPorPresentacion)
     : quantity;
 
   const totalPrice = displayPrice * totalUnits;
@@ -650,7 +650,7 @@ export function ProductDetail() {
                 <div className="mt-2 flex items-center gap-1.5 animate-in fade-in slide-in-from-left-1">
                   <div className="w-1 h-1 rounded-full bg-mare-green"></div>
                   <span className="text-[10px] font-black text-mare-green uppercase tracking-tight">
-                    Total: {quantity * product.ventaMayorista.unidadesPorPresentacion} unidades
+                    Total: {quantity * (product.ventaMayorista.presentacion === 'Unidad' ? 1 : product.ventaMayorista.unidadesPorPresentacion)} unidades
                   </span>
                 </div>
               )}

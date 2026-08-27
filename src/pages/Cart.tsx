@@ -42,7 +42,7 @@ export function Cart() {
     const pricing = getBestPrice(item, item.quantity, !!item.isWholesale);
     const price = pricing.finalPrice;
     const finalPrice = price;
-    const unitsPerPresentacion = (item.isWholesale && item.ventaMayorista) ? item.ventaMayorista.unidadesPorPresentacion || 1 : 1;
+    const unitsPerPresentacion = (item.isWholesale && item.ventaMayorista) ? (item.ventaMayorista.presentacion === 'Unidad' ? 1 : (item.ventaMayorista.unidadesPorPresentacion || 1)) : 1;
     return acc + (finalPrice * item.quantity * unitsPerPresentacion);
   }, 0);
 
@@ -242,7 +242,7 @@ export function Cart() {
                       const pricing = getBestPrice(item, item.quantity, !!item.isWholesale);
                       const isWholesale = item.isWholesale && item.ventaMayorista;
                       const price = isWholesale ? item.ventaMayorista!.precioMN : pricing.finalPrice;
-                      const unitsPerPresentacion = isWholesale ? item.ventaMayorista!.unidadesPorPresentacion || 1 : 1;
+                      const unitsPerPresentacion = isWholesale ? (item.ventaMayorista!.presentacion === 'Unidad' ? 1 : (item.ventaMayorista!.unidadesPorPresentacion || 1)) : 1;
                       return acc + (price * item.quantity * unitsPerPresentacion);
                     }, 0))}
                   </span>

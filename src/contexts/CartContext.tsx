@@ -277,7 +277,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
     const pricing = getBestPrice(item as Product, item.quantity, !!item.isWholesale);
     const units = (item.isWholesale && item.ventaMayorista?.unidadesPorPresentacion) 
-      ? item.quantity * item.ventaMayorista.unidadesPorPresentacion
+      ? item.quantity * (item.ventaMayorista.presentacion === 'Unidad' ? 1 : item.ventaMayorista.unidadesPorPresentacion)
       : item.quantity;
     
     return sum + (pricing.finalPrice * units);
