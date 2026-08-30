@@ -179,16 +179,20 @@ export function Checkout() {
           municipality_id: municipalities.find(m => m.nombre === data.municipio)?.id,
           address: orderInfo.delivery.direccion,
           customer_notes: orderInfo.observaciones,
-          items: orderInfo.items.map((item: any) => ({
+          items: orderInfo.items.map((item: any) => {
+            const pricing = getProductPricing(item, item.quantity, !!(item.isWholesale && item.ventaMayorista));
+            const unitsPerPresentacion = item.isWholesale && item.ventaMayorista ? (item.ventaMayorista.presentacion === 'Unidad' ? 1 : (item.ventaMayorista.unidadesPorPresentacion || 1)) : 1;
+            return {
             product_id: item.id,
             product_name: item.nombre,
-            unit_price_cup: item.precioBaseMN || item.precioMN,
+            unit_price_cup: pricing.finalPrice,
             quantity: item.quantity,
-            subtotal_cup: (item.precioBaseMN || item.precioMN) * item.quantity,
+            subtotal_cup: pricing.finalPrice * item.quantity * unitsPerPresentacion,
             units_per_presentation: item.isWholesale && item.ventaMayorista 
               ? (item.ventaMayorista.unidadesPorPresentacion || 1) 
               : 1
-          }))
+          };
+          })
         });
       } catch (dbError) {
         console.error("Failed to save order to DB:", dbError);
@@ -299,7 +303,7 @@ export function Checkout() {
                                   x{item.quantity}
                                 </span>
                               <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">
-                                {`${formatPrice(isWholesale ? item.ventaMayorista!.precioMN : pricing.finalPrice)} u`}
+                                {`${formatPrice(pricing.finalPrice)} u`}
                               </span>
                             </div>
                           </div>

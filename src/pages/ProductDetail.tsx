@@ -599,7 +599,7 @@ export function ProductDetail() {
                 <button 
                   onClick={handleDecrease}
                   className="p-2 text-gray-400 hover:text-mare-navy hover:bg-white rounded-lg transition-all disabled:opacity-30"
-                  disabled={quantity <= 1 || !isAvailable}
+                  disabled={quantity <= (forceWholesale && product?.ventaMayorista?.cantidadMinima ? product.ventaMayorista.cantidadMinima : 1) || !isAvailable}
                   aria-label="Reducir cantidad"
                 >
                   <Minus strokeWidth={2} className="w-3.5 h-3.5" />
@@ -607,6 +607,16 @@ export function ProductDetail() {
                 <input 
                   type="number"
                   value={quantity}
+                  onBlur={() => {
+                    if (forceWholesale && product?.ventaMayorista?.cantidadMinima && quantity < product.ventaMayorista.cantidadMinima) {
+                      setQuantity(product.ventaMayorista.cantidadMinima);
+                      toast({
+                        type: 'info',
+                        title: 'Mínimo Mayorista',
+                        description: `El mínimo de compra es ${product.ventaMayorista.cantidadMinima}.`
+                      });
+                    }
+                  }}
                   onChange={(e) => {
                     const val = parseInt(e.target.value);
                     if (!isNaN(val) && val >= 1) {

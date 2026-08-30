@@ -572,7 +572,7 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
 
           {formData.ventaMayorista?.habilitada && (
             <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100 space-y-4 min-w-0">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="min-w-0">
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
                     Tipo de Presentación
@@ -592,22 +592,45 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
                   </select>
                 </div>
                 
+                {formData.ventaMayorista.presentacion !== 'Unidad' && (
+                  <div className="min-w-0">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                      Unidades por {formData.ventaMayorista.presentacion}
+                    </label>
+                    <input 
+                      type="number"
+                      min="2"
+                      value={formData.ventaMayorista.unidadesPorPresentacion || 1}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 1;
+                        setFormData(prev => ({
+                          ...prev,
+                          ventaMayorista: { 
+                            ...prev.ventaMayorista!, 
+                            unidadesPorPresentacion: val
+                          }
+                        }));
+                      }}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-mare-navy focus:ring-2 focus:ring-mare-turquoise/20 focus:border-mare-turquoise outline-none transition-all bg-white"
+                    />
+                  </div>
+                )}
+
                 <div className="min-w-0">
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
-                    {formData.ventaMayorista.presentacion === 'Unidad' ? 'Cant. Mínima (Unidades)' : `Unidades por ${formData.ventaMayorista.presentacion}`}
+                    Cant. Mínima ({formData.ventaMayorista.presentacion}s)
                   </label>
                   <input 
                     type="number"
                     min="1"
-                    value={formData.ventaMayorista.unidadesPorPresentacion || 1}
+                    value={formData.ventaMayorista.cantidadMinima || 1}
                     onChange={(e) => {
                       const val = parseInt(e.target.value) || 1;
                       setFormData(prev => ({
                         ...prev,
                         ventaMayorista: { 
                           ...prev.ventaMayorista!, 
-                          unidadesPorPresentacion: val,
-                          cantidadMinima: prev.ventaMayorista?.presentacion === 'Unidad' ? val : 1
+                          cantidadMinima: val
                         }
                       }));
                     }}
@@ -632,7 +655,6 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
                   />
                 </div>
               </div>
-
               {formData.ventaMayorista.presentacion !== 'Unidad' && (
                 <div className="p-3 bg-white border border-gray-200 rounded-xl">
                   <div className="flex justify-between items-center">

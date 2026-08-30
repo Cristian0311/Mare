@@ -184,7 +184,7 @@ export function Cart() {
                             <div className="flex items-center bg-white border border-gray-200 rounded-lg h-8 shadow-sm">
                               <button
                                 onClick={() => updateQuantity(itemId, Math.max(1, item.quantity - 1))}
-                                disabled={item.quantity <= 1 || !isItemAvailable}
+                                disabled={item.quantity <= (item.precioMN === 0 && item.ventaMayorista?.cantidadMinima ? item.ventaMayorista.cantidadMinima : 1) || !isItemAvailable}
                                 className="w-8 h-full flex items-center justify-center rounded-l-lg hover:bg-gray-50 active:bg-gray-100 disabled:opacity-30 transition-colors text-mare-navy"
                               >
                                 <Minus strokeWidth={2.5} className="w-2.5 h-2.5" />
@@ -241,7 +241,7 @@ export function Cart() {
                     {formatPrice(items.reduce((acc, item) => {
                       const pricing = getBestPrice(item, item.quantity, !!item.isWholesale);
                       const isWholesale = item.isWholesale && item.ventaMayorista;
-                      const price = isWholesale ? item.ventaMayorista!.precioMN : pricing.finalPrice;
+                      const price = pricing.finalPrice;
                       const unitsPerPresentacion = isWholesale ? (item.ventaMayorista!.presentacion === 'Unidad' ? 1 : (item.ventaMayorista!.unidadesPorPresentacion || 1)) : 1;
                       return acc + (price * item.quantity * unitsPerPresentacion);
                     }, 0))}
