@@ -38,7 +38,17 @@ export function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [activeImage, setActiveImage] = useState(0);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(() => {
+    // If we have product in memory from service, sync quantity initially
+    const pathParts = window.location.pathname.split('/');
+    const currentSlug = pathParts[pathParts.length - 1];
+    const initialProduct = currentSlug ? productService.getProductBySlugSync(currentSlug) : null;
+    const forceWh = initialProduct?.ventaMayorista?.habilitada && initialProduct?.precioMN === 0;
+    if (forceWh && initialProduct?.ventaMayorista?.cantidadMinima) {
+      return initialProduct.ventaMayorista.cantidadMinima;
+    }
+    return 1;
+  });
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [zoomOpen, setZoomOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -150,7 +160,14 @@ export function ProductDetail() {
         });
         setSelectedVariants(initial);
       }
-      setQuantity(1);
+      
+      const forceWholesale = product.ventaMayorista?.habilitada && product.precioMN === 0;
+      if (forceWholesale && product.ventaMayorista?.cantidadMinima) {
+        setQuantity(product.ventaMayorista.cantidadMinima);
+      } else {
+        setQuantity(1);
+      }
+      
       setActiveImage(0);
     }
   }, [product]);
@@ -269,11 +286,11 @@ export function ProductDetail() {
   };
 
   const handleIncrease = () => {
-    if (quantity < 999) {
-      const nextQuantity = quantity + 1;
-      setQuantity(nextQuantity);
+    // Increase quantity, removing the arbitrary 999 limit to support large wholesale orders
+    const nextQuantity = quantity + 1;
+    setQuantity(nextQuantity);
 
-      // Auto-activate wholesale if eligible and reached minimum
+    // Auto-activate wholesale if eligible and reached minimum
       if (!isWholesale && product?.ventaMayorista?.habilitada && product.ventaMayorista.cantidadMinima && nextQuantity >= product.ventaMayorista.cantidadMinima) {
         setIsWholesaleState(true);
         toast({
@@ -282,7 +299,6 @@ export function ProductDetail() {
           description: `Alcanzaste el mínimo de ${product.ventaMayorista.cantidadMinima} unidades.`
         });
       }
-    }
   };
 
   const isInCart = items.some(item => item.id === product.id);
