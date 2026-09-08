@@ -25,6 +25,21 @@ export function Footer() {
               <Logo textClassName="text-white" iconClassName="text-mare-turquoise" />
             </div>
             <p className="text-mare-turquoise font-medium">{config.eslogan}</p>
+            
+            {config.features?.catalogMode && config.delivery?.pickupLocations?.[0] && (
+              <div className="mt-6 text-left bg-white/5 rounded-xl p-4 border border-white/10 max-w-sm">
+                <h4 className="text-[10px] font-black text-mare-turquoise uppercase tracking-widest mb-2">Visítanos en nuestra tienda</h4>
+                <p className="text-sm font-bold text-white leading-tight mb-1">
+                  {config.delivery.pickupLocations[0].name}
+                </p>
+                <p className="text-xs text-gray-300 mb-2">
+                  {config.delivery.pickupLocations[0].address}
+                </p>
+                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  {config.delivery.pickupLocations[0].schedule}
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="flex flex-col sm:flex-row gap-8 sm:gap-16">
@@ -41,7 +56,9 @@ export function Footer() {
               <h4 className="font-bold text-lg mb-2 text-white">Información</h4>
               <Link to="/informacion/como-comprar" className="text-gray-300 hover:text-white transition-colors">Cómo comprar</Link>
               {config.delivery.enabled && (
-                <Link to="/informacion/entregas" className="text-gray-300 hover:text-white transition-colors">Entregas</Link>
+                <Link to="/informacion/entregas" className="text-gray-300 hover:text-white transition-colors">
+                  {config.features?.catalogMode ? 'Ubicación' : 'Entregas'}
+                </Link>
               )}
               <Link to="/informacion/faq" className="text-gray-300 hover:text-white transition-colors">Preguntas frecuentes</Link>
               <Link to="/informacion/condiciones" className="text-gray-300 hover:text-white transition-colors">Condiciones</Link>

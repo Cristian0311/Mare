@@ -11,6 +11,7 @@ import { useCart } from '../../contexts/CartContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { usePromotions } from '../../contexts/PromotionContext';
+import { useWhatsApp } from '../../contexts/WhatsAppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { shareProduct, buildProductWhatsAppShare, copyToClipboard } from '../../utils/share';
 import { getProductPricing } from '../../utils/pricing';
@@ -51,6 +52,7 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
   const { toast } = useToast();
   const { addItem } = useCart();
   const { formatPrice } = useCurrency();
+  const { openWhatsApp } = useWhatsApp();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { getBestPrice } = usePromotions();
   
@@ -348,7 +350,22 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
               )}
             </div>
             
-            {!config?.features?.catalogMode && (
+            {config?.features?.catalogMode ? (
+              <Button 
+                variant="primary" 
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const priceText = formatPrice(pricing ? pricing.finalPrice : product.precioMN);
+                  const url = `${window.location.origin}/producto/${product.slug}`;
+                  const msg = `Hola MARÉ, me interesa este producto que vi en el catálogo:\n\n*${product.nombre}*\n*Precio:* ${priceText}\n\nEnlace: ${url}\n\n¿Me podrían dar más información?`;
+                  openWhatsApp(msg);
+                }}
+                className="w-full sm:w-auto h-6 sm:h-[26px] px-2 sm:px-2.5 font-black text-[7px] sm:text-[8px] shadow-sm transition-all uppercase tracking-tighter rounded-lg shrink-0 group-hover:bg-mare-turquoise"
+              >
+                PREGUNTAR
+              </Button>
+            ) : (
               <Button 
                 id={`btn-add-${product.id}`}
                 variant="primary" 

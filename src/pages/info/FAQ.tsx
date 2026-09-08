@@ -4,6 +4,7 @@ import { Accordion } from '../../components/ui/Accordion';
 import { Search, CircleHelp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { SEO } from '../../components/ui/SEO';
+import { configService } from '../../services/config';
 
 const defaultFaqs = [
   {
@@ -63,20 +64,78 @@ const defaultFaqs = [
   }
 ];
 
+const catalogFaqs = [
+  {
+    category: 'Catálogo y Compras',
+    questions: [
+      {
+        id: 'q1',
+        title: '¿Cómo adquiero un producto del catálogo?',
+        content: 'Actualmente funcionamos como catálogo digital. Visítanos en nuestra tienda física para ver, probar y comprar los productos directamente.'
+      },
+      {
+        id: 'q2',
+        title: '¿Puedo reservar un producto online?',
+        content: 'Las compras online están desactivadas. Para cualquier duda, reserva o consulta sobre disponibilidad, puedes tocar el botón "Preguntar por este producto" y contactar a nuestros asesores vía WhatsApp.'
+      },
+      {
+        id: 'q3',
+        title: '¿Tienen la misma disponibilidad en la tienda física?',
+        content: 'Nuestro catálogo se actualiza constantemente para reflejar el inventario de nuestra tienda. Te sugerimos confirmar la disponibilidad por WhatsApp antes de visitarnos.'
+      }
+    ]
+  },
+  {
+    category: 'Ubicación y Horarios',
+    questions: [
+      {
+        id: 'q4',
+        title: '¿Dónde están ubicados?',
+        content: 'Puedes encontrar nuestra dirección exacta y enlace de Google Maps en la información de cualquier producto o en la parte inferior de esta página web.'
+      },
+      {
+        id: 'q5',
+        title: '¿Qué métodos de pago aceptan en la tienda?',
+        content: 'En nuestra tienda física aceptamos pagos en efectivo, transferencias bancarias y otros métodos convenidos. Consulta con un asesor para más detalles.'
+      }
+    ]
+  }
+];
+
 export function FAQ() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [faqs, setFaqs] = useState<any[]>(defaultFaqs);
+  const [config, setConfig] = useState(configService.getConfigSync());
+  const isCatalog = config?.features?.catalogMode;
+  const [faqs, setFaqs] = useState<any[]>(isCatalog ? catalogFaqs : defaultFaqs);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('MARE_FAQS');
-      if (saved) {
-        setFaqs(JSON.parse(saved));
+    const handleConfigUpdate = () => {
+      const newConfig = configService.getConfigSync();
+      setConfig(newConfig);
+      if (newConfig?.features?.catalogMode) {
+        setFaqs(catalogFaqs);
+      } else {
+        try {
+          const saved = localStorage.getItem('MARE_FAQS');
+          setFaqs(saved ? JSON.parse(saved) : defaultFaqs);
+        } catch (e) {
+          setFaqs(defaultFaqs);
+        }
       }
-    } catch (e) {
-      console.warn('Failed to load FAQs from storage', e);
+    };
+    window.addEventListener('mare_config_updated', handleConfigUpdate);
+    
+    if (!isCatalog) {
+      try {
+        const saved = localStorage.getItem('MARE_FAQS');
+        if (saved) setFaqs(JSON.parse(saved));
+      } catch (e) {
+        console.warn('Failed to load FAQs from storage', e);
+      }
     }
-  }, []);
+    
+    return () => window.removeEventListener('mare_config_updated', handleConfigUpdate);
+  }, [isCatalog]);
 
   const filteredFaqs = faqs.map(category => ({
     ...category,

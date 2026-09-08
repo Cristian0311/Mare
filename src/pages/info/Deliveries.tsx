@@ -1,14 +1,63 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { InfoBreadcrumbs } from '../../components/ui/InfoBreadcrumbs';
-import { Truck, MapPin, Clock, CreditCard } from 'lucide-react';
+import { Truck, MapPin, Clock, CreditCard, Store } from 'lucide-react';
 import { cubaLocations } from '../../data/cubaLocations';
 import { SEO } from '../../components/ui/SEO';
+import { configService } from '../../services/config';
 
 export function Deliveries() {
+  const [config, setConfig] = useState(configService.getConfigSync());
+  const isCatalog = config?.features?.catalogMode;
+  
+  useEffect(() => {
+    const handleConfigUpdate = () => setConfig(configService.getConfigSync());
+    window.addEventListener('mare_config_updated', handleConfigUpdate);
+    return () => window.removeEventListener('mare_config_updated', handleConfigUpdate);
+  }, []);
+
   const selectedProvince = useMemo(() => 
     cubaLocations.find(p => p.id === 'la-habana'), 
     []
   );
+
+  if (isCatalog) {
+    return (
+      <div className="animate-in fade-in duration-500 pb-12 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SEO 
+          title="Visítanos - Catálogo" 
+          description="Información de nuestra tienda física."
+        />
+        <InfoBreadcrumbs items={[{ name: 'Visítanos' }]} />
+        
+        <header className="mb-10">
+          <h1 className="text-3xl font-black text-mare-navy tracking-tighter mb-4">
+            Visítanos en Tienda
+          </h1>
+          <p className="text-gray-500 font-medium">
+            Actualmente operamos como catálogo digital. Las compras y retiros se realizan directamente en nuestra ubicación física.
+          </p>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          {config?.delivery?.pickupLocations?.map((loc, idx) => (
+            <div key={idx} className="p-6 rounded-2xl bg-white border border-gray-100 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-mare-navy text-mare-gold flex items-center justify-center mb-4">
+                <Store className="h-5 w-5" />
+              </div>
+              <h3 className="text-sm font-black text-mare-navy uppercase tracking-tight mb-2">{loc.name}</h3>
+              <p className="text-xs text-gray-500 leading-relaxed mb-3">
+                {loc.address}
+              </p>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg text-[10px] font-bold text-gray-700 uppercase tracking-wider">
+                <Clock className="w-3 h-3 text-mare-turquoise" />
+                {loc.schedule}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-in fade-in duration-500 pb-12 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">

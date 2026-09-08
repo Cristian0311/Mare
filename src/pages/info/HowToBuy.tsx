@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { InfoBreadcrumbs } from '../../components/ui/InfoBreadcrumbs';
-import { ShoppingBag, Search, CheckSquare, ListChecks, Send, MessageCircle } from 'lucide-react';
+import { ShoppingBag, Search, CheckSquare, ListChecks, Send, MessageCircle, MapPin } from 'lucide-react';
 import { SEO } from '../../components/ui/SEO';
 import { useState, useEffect } from 'react';
+import { configService } from '../../services/config';
 
 const defaultSteps = [
   {
@@ -43,25 +44,84 @@ const defaultSteps = [
   }
 ];
 
+const catalogSteps = [
+  {
+    number: '01',
+    title: 'Explora el Catálogo',
+    description: 'Navega por las categorías para ver todo lo que tenemos disponible actualmente en nuestra tienda.',
+    icon: <Search className="h-6 w-6" />
+  },
+  {
+    number: '02',
+    title: 'Consulta',
+    description: 'Si te interesa algún producto, presiona "Preguntar por este producto" para contactar a un asesor.',
+    icon: <MessageCircle className="h-6 w-6" />
+  },
+  {
+    number: '03',
+    title: 'Visítanos',
+    description: 'Encuentra nuestra dirección y horario en el pie de página o detalles del producto y visítanos.',
+    icon: <MapPin className="h-6 w-6" />
+  },
+  {
+    number: '04',
+    title: 'Compra en Tienda',
+    description: 'Adquiere los productos directamente en nuestro local físico con la mejor atención.',
+    icon: <ShoppingBag className="h-6 w-6" />
+  }
+];
+
 export function HowToBuy() {
-  const [steps, setSteps] = useState<any[]>(defaultSteps);
+  const [config, setConfig] = useState(configService.getConfigSync());
+  const isCatalog = config?.features?.catalogMode;
+  
+  const [steps, setSteps] = useState<any[]>(isCatalog ? catalogSteps : defaultSteps);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('MARE_HOW_TO_BUY');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Map original step icons back
-        const merged = parsed.map((item: any, idx: number) => ({
-          ...item,
-          icon: defaultSteps[idx]?.icon || <Search className="h-6 w-6" />
-        }));
-        setSteps(merged);
+    const handleConfigUpdate = () => {
+      const newConfig = configService.getConfigSync();
+      setConfig(newConfig);
+      if (newConfig?.features?.catalogMode) {
+        setSteps(catalogSteps);
+      } else {
+        try {
+          const saved = localStorage.getItem('MARE_HOW_TO_BUY');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            const merged = parsed.map((item: any, idx: number) => ({
+              ...item,
+              icon: defaultSteps[idx]?.icon || <Search className="h-6 w-6" />
+            }));
+            setSteps(merged);
+          } else {
+            setSteps(defaultSteps);
+          }
+        } catch (e) {
+          setSteps(defaultSteps);
+        }
       }
-    } catch (e) {
-      console.warn('Failed loading local How To Buy steps', e);
+    };
+    
+    window.addEventListener('mare_config_updated', handleConfigUpdate);
+    
+    if (!isCatalog) {
+      try {
+        const saved = localStorage.getItem('MARE_HOW_TO_BUY');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          const merged = parsed.map((item: any, idx: number) => ({
+            ...item,
+            icon: defaultSteps[idx]?.icon || <Search className="h-6 w-6" />
+          }));
+          setSteps(merged);
+        }
+      } catch (e) {
+        console.warn('Failed loading local How To Buy steps', e);
+      }
     }
-  }, []);
+    
+    return () => window.removeEventListener('mare_config_updated', handleConfigUpdate);
+  }, [isCatalog]);
 
   return (
     <div className="animate-in fade-in duration-500 pb-12 max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
