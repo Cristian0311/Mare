@@ -20,6 +20,7 @@ export function AdminSettings() {
   const [generalNumber, setGeneralNumber] = useState('+5355555555');
   const [generalNumberError, setGeneralNumberError] = useState('');
   const [exchangeRateUSD, setExchangeRateUSD] = useState(320);
+  const [catalogMode, setCatalogMode] = useState(false);
 
   useEffect(() => {
     loadConfig();
@@ -32,6 +33,7 @@ export function AdminSettings() {
       setEslogan(cfg.eslogan || 'Todo lo que buscas');
       setGeneralNumber(cfg.whatsapp?.generalNumber || '+5355555555');
       setExchangeRateUSD(cfg.currency?.exchangeRateUSD || 320);
+      setCatalogMode(cfg.features?.catalogMode || false);
     } catch (e) {
       console.error('Error loading config:', e);
     }
@@ -53,6 +55,10 @@ export function AdminSettings() {
         whatsapp: {
           ...configService.getConfigSync().whatsapp,
           generalNumber
+        },
+        features: {
+          ...configService.getConfigSync().features,
+          catalogMode
         }
       });
       success('Configuración Guardada', 'La información general de la tienda ha sido actualizada.');
@@ -213,6 +219,29 @@ export function AdminSettings() {
                         Número maestro para recepción de pedidos y soporte general.
                       </p>
                     )}
+                  </div>
+
+                  <div className="md:col-span-2 pt-6 border-t border-gray-100">
+                    <div className="flex items-start gap-4">
+                      <div className="pt-1">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            className="sr-only peer"
+                            checked={catalogMode}
+                            onChange={(e) => setCatalogMode(e.target.checked)}
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-mare-navy"></div>
+                        </label>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-mare-navy tracking-tight mb-1">Modo Catálogo Digital</h4>
+                        <p className="text-xs text-gray-500 leading-relaxed font-medium">
+                          Al activar esta opción, <strong className="text-mare-navy">se deshabilitarán las compras y el carrito</strong> en la tienda. 
+                          MARÉ funcionará únicamente como un catálogo digital (vitrina) para mostrar tus productos físicos.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

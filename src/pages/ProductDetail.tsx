@@ -605,155 +605,186 @@ export function ProductDetail() {
           
           <Divider />
 
-          {/* Cantidad - Más pequeña */}
-          <div className="flex items-center justify-between gap-4 py-2">
-            <div>
-              <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
-                {isWholesale ? `Cantidad de ${product.ventaMayorista?.presentacion.toLowerCase()}s` : 'Cantidad'}
-              </h3>
-              <div className="flex items-center w-fit bg-gray-50 border border-gray-200 rounded-xl p-0.5 shadow-inner">
-                <button 
-                  onClick={handleDecrease}
-                  className="p-2 text-gray-400 hover:text-mare-navy hover:bg-white rounded-lg transition-all disabled:opacity-30"
-                  disabled={quantity <= (forceWholesale && product?.ventaMayorista?.cantidadMinima ? product.ventaMayorista.cantidadMinima : 1) || !isAvailable}
-                  aria-label="Reducir cantidad"
-                >
-                  <Minus strokeWidth={2} className="w-3.5 h-3.5" />
-                </button>
-                <input 
-                  type="number"
-                  value={quantity}
-                  onBlur={() => {
-                    if (forceWholesale && product?.ventaMayorista?.cantidadMinima && quantity < product.ventaMayorista.cantidadMinima) {
-                      setQuantity(product.ventaMayorista.cantidadMinima);
-                      toast({
-                        type: 'info',
-                        title: 'Mínimo Mayorista',
-                        description: `El mínimo de compra es ${product.ventaMayorista.cantidadMinima}.`
-                      });
-                    }
-                  }}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (!isNaN(val) && val >= 1) {
-                      setQuantity(val);
-                      // Auto-activate wholesale if eligible and reached minimum
-                      if (!isWholesale && product?.ventaMayorista?.habilitada && product.ventaMayorista.cantidadMinima && val >= product.ventaMayorista.cantidadMinima) {
-                        setIsWholesaleState(true);
-                        toast({
-                          type: 'success',
-                          title: '¡Modo Mayorista Activado!',
-                          description: `Alcanzaste el mínimo de ${product.ventaMayorista.cantidadMinima} unidades.`
-                        });
-                      } else if (isWholesale && !forceWholesale && product?.ventaMayorista?.cantidadMinima && val < product.ventaMayorista.cantidadMinima) {
-                        setIsWholesaleState(false);
-                        toast({
-                          type: 'info',
-                          title: 'Venta al Detalle',
-                          description: 'Se ha cambiado a precio por unidad por estar debajo del mínimo mayorista.'
-                        });
-                      }
-                    } else if (e.target.value === '') {
-                      setQuantity(1);
-                      if (isWholesale && !forceWholesale) {
-                        setIsWholesaleState(false);
-                      }
-                    }
-                  }}
-                  className="w-12 text-center font-black text-sm text-mare-navy bg-transparent border-none focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  disabled={!isAvailable}
-                />
-                <button 
-                  onClick={handleIncrease}
-                  className="p-2 text-gray-400 hover:text-mare-navy hover:bg-white rounded-lg transition-all disabled:opacity-30"
-                  disabled={!isAvailable}
-                  aria-label="Aumentar cantidad"
-                >
-                  <Plus strokeWidth={2} className="w-3.5 h-3.5" />
-                </button>
+          {config?.features?.catalogMode ? (
+            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 my-6">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-10 h-10 rounded-full bg-mare-navy/5 flex items-center justify-center text-mare-navy">
+                  <Package strokeWidth={2} className="w-5 h-5" />
+                </div>
               </div>
-              {isWholesale && (product.ventaMayorista?.unidadesPorPresentacion || 0) > 0 && (
-                <div className="mt-2 flex items-center gap-1.5 animate-in fade-in slide-in-from-left-1">
-                  <div className="w-1 h-1 rounded-full bg-mare-green"></div>
-                  <span className="text-[10px] font-black text-mare-green uppercase tracking-tight">
-                    Total: {quantity * (product.ventaMayorista.presentacion === 'Unidad' ? 1 : product.ventaMayorista.unidadesPorPresentacion)} unidades
-                  </span>
+              <h3 className="text-[11px] font-black text-mare-navy uppercase tracking-widest mb-2 text-center">Disponible en Tienda</h3>
+              <p className="text-xs text-gray-500 font-medium leading-relaxed text-center mb-5">
+                MARÉ funciona actualmente como un catálogo digital. Visítanos en nuestra tienda física para adquirir este producto.
+              </p>
+              
+              {config?.delivery?.pickupLocations?.[0] && (
+                <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm text-left">
+                  <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Dirección Principal</h4>
+                  <p className="text-sm font-bold text-mare-navy leading-tight mb-1">
+                    {config.delivery.pickupLocations[0].name}
+                  </p>
+                  <p className="text-xs text-gray-500 mb-2">
+                    {config.delivery.pickupLocations[0].address}
+                  </p>
+                  <div className="text-[10px] font-black text-mare-gold uppercase tracking-widest">
+                    {config.delivery.pickupLocations[0].schedule}
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* Total Simple al lado de cantidad */}
-            <div className="text-right">
-              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-0.5">Total</span>
-              <div className="flex flex-col items-end">
-                <div className="whitespace-nowrap">
-                  <span className="text-xl font-black leading-none tracking-tighter inline-block text-mare-navy">
-                    {formatPrice(totalPrice)}
-                  </span>
-                </div>
-                {pricing && pricing.savings > 0 && (
-                  <div className="mt-1.5 flex flex-col items-end animate-in fade-in slide-in-from-right-1">
-                    <span className="text-[9px] font-black text-mare-green bg-mare-green/10 px-2 py-0.5 rounded-full uppercase tracking-widest">
-                      ESTÁS AHORRANDO {formatPrice(pricing.savings * totalUnits)}
-                    </span>
-                    {isWholesale && (
-                      <span className="text-[7px] font-bold text-gray-400 uppercase mt-0.5">
-                        PRECIO MAYORISTA APLICADO
+          ) : (
+            <>
+              {/* Cantidad - Más pequeña */}
+              <div className="flex items-center justify-between gap-4 py-2">
+                <div>
+                  <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                    {isWholesale ? `Cantidad de ${product.ventaMayorista?.presentacion.toLowerCase()}s` : 'Cantidad'}
+                  </h3>
+                  <div className="flex items-center w-fit bg-gray-50 border border-gray-200 rounded-xl p-0.5 shadow-inner">
+                    <button 
+                      onClick={handleDecrease}
+                      className="p-2 text-gray-400 hover:text-mare-navy hover:bg-white rounded-lg transition-all disabled:opacity-30"
+                      disabled={quantity <= (forceWholesale && product?.ventaMayorista?.cantidadMinima ? product.ventaMayorista.cantidadMinima : 1) || !isAvailable}
+                      aria-label="Reducir cantidad"
+                    >
+                      <Minus strokeWidth={2} className="w-3.5 h-3.5" />
+                    </button>
+                    <input 
+                      type="number"
+                      value={quantity}
+                      onBlur={() => {
+                        if (forceWholesale && product?.ventaMayorista?.cantidadMinima && quantity < product.ventaMayorista.cantidadMinima) {
+                          setQuantity(product.ventaMayorista.cantidadMinima);
+                          toast({
+                            type: 'info',
+                            title: 'Mínimo Mayorista',
+                            description: `El mínimo de compra es ${product.ventaMayorista.cantidadMinima}.`
+                          });
+                        }
+                      }}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val) && val >= 1) {
+                          setQuantity(val);
+                          // Auto-activate wholesale if eligible and reached minimum
+                          if (!isWholesale && product?.ventaMayorista?.habilitada && product.ventaMayorista.cantidadMinima && val >= product.ventaMayorista.cantidadMinima) {
+                            setIsWholesaleState(true);
+                            toast({
+                              type: 'success',
+                              title: '¡Modo Mayorista Activado!',
+                              description: `Alcanzaste el mínimo de ${product.ventaMayorista.cantidadMinima} unidades.`
+                            });
+                          } else if (isWholesale && !forceWholesale && product?.ventaMayorista?.cantidadMinima && val < product.ventaMayorista.cantidadMinima) {
+                            setIsWholesaleState(false);
+                            toast({
+                              type: 'info',
+                              title: 'Venta al Detalle',
+                              description: 'Se ha cambiado a precio por unidad por estar debajo del mínimo mayorista.'
+                            });
+                          }
+                        } else if (e.target.value === '') {
+                          setQuantity(1);
+                          if (isWholesale && !forceWholesale) {
+                            setIsWholesaleState(false);
+                          }
+                        }
+                      }}
+                      className="w-12 text-center font-black text-sm text-mare-navy bg-transparent border-none focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      disabled={!isAvailable}
+                    />
+                    <button 
+                      onClick={handleIncrease}
+                      className="p-2 text-gray-400 hover:text-mare-navy hover:bg-white rounded-lg transition-all disabled:opacity-30"
+                      disabled={!isAvailable}
+                      aria-label="Aumentar cantidad"
+                    >
+                      <Plus strokeWidth={2} className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  {isWholesale && (product.ventaMayorista?.unidadesPorPresentacion || 0) > 0 && (
+                    <div className="mt-2 flex items-center gap-1.5 animate-in fade-in slide-in-from-left-1">
+                      <div className="w-1 h-1 rounded-full bg-mare-green"></div>
+                      <span className="text-[10px] font-black text-mare-green uppercase tracking-tight">
+                        Total: {quantity * (product.ventaMayorista.presentacion === 'Unidad' ? 1 : product.ventaMayorista.unidadesPorPresentacion)} unidades
                       </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Total Simple al lado de cantidad */}
+                <div className="text-right">
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-0.5">Total</span>
+                  <div className="flex flex-col items-end">
+                    <div className="whitespace-nowrap">
+                      <span className="text-xl font-black leading-none tracking-tighter inline-block text-mare-navy">
+                        {formatPrice(totalPrice)}
+                      </span>
+                    </div>
+                    {pricing && pricing.savings > 0 && (
+                      <div className="mt-1.5 flex flex-col items-end animate-in fade-in slide-in-from-right-1">
+                        <span className="text-[9px] font-black text-mare-green bg-mare-green/10 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                          ESTÁS AHORRANDO {formatPrice(pricing.savings * totalUnits)}
+                        </span>
+                        {isWholesale && (
+                          <span className="text-[7px] font-bold text-gray-400 uppercase mt-0.5">
+                            PRECIO MAYORISTA APLICADO
+                          </span>
+                        )}
+                      </div>
                     )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="my-6"></div>
+              
+              {/* Acciones - Botón principal */}
+              <div className="flex flex-col gap-3">
+                <Button 
+                  variant={addedRecently ? "outline" : "primary"}
+                  className={`w-full h-12 font-black tracking-widest text-[10px] rounded-xl shadow-md gap-2 relative overflow-hidden transition-all duration-300 ${isAdding ? 'scale-[0.98] opacity-90' : ''}`}
+                  onClick={handleAddToCart}
+                  disabled={!isAvailable || isAdding}
+                >
+                  {isAdding ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      AÑADIENDO...
+                    </div>
+                  ) : addedRecently ? (
+                    <>
+                      <Check strokeWidth={3} className="w-4 h-4 text-mare-green" />
+                      ✓ AGREGADO A MI PEDIDO
+                    </>
+                  ) : !isAvailable ? (
+                    'AGOTADO'
+                  ) : (
+                    <>
+                      <ShoppingBag strokeWidth={2} className="w-3.5 h-3.5" />
+                      {'AÑADIR AL PEDIDO'}
+                    </>
+                  )}
+                </Button>
+
+                {addedRecently && (
+                  <div className="grid grid-cols-1 gap-2 animate-in slide-in-from-top-2 duration-300">
+                    <Button 
+                      variant="outline"
+                      className="h-10 text-[9px] font-black tracking-widest rounded-xl border-mare-navy/10"
+                      onClick={() => navigate('/mi-pedido')}
+                    >
+                      VER PEDIDO
+                    </Button>
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-
-          <div className="my-6"></div>
-          
-          {/* Acciones - Botón principal */}
-          <div className="flex flex-col gap-3">
-            <Button 
-              variant={addedRecently ? "outline" : "primary"}
-              className={`w-full h-12 font-black tracking-widest text-[10px] rounded-xl shadow-md gap-2 relative overflow-hidden transition-all duration-300 ${isAdding ? 'scale-[0.98] opacity-90' : ''}`}
-              onClick={handleAddToCart}
-              disabled={!isAvailable || isAdding}
-            >
-              {isAdding ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  AÑADIENDO...
-                </div>
-              ) : addedRecently ? (
-                <>
-                  <Check strokeWidth={3} className="w-4 h-4 text-mare-green" />
-                  ✓ AGREGADO A MI PEDIDO
-                </>
-              ) : !isAvailable ? (
-                'AGOTADO'
-              ) : (
-                <>
-                  <ShoppingBag strokeWidth={2} className="w-3.5 h-3.5" />
-                  {'AÑADIR AL PEDIDO'}
-                </>
+              
+              {!isAvailable && (
+                 <p className="mt-4 text-xs font-bold text-red-500 text-center bg-red-50 py-2 rounded-lg">
+                   Este producto está temporalmente agotado.
+                 </p>
               )}
-            </Button>
-
-            {addedRecently && (
-              <div className="grid grid-cols-1 gap-2 animate-in slide-in-from-top-2 duration-300">
-                <Button 
-                  variant="outline"
-                  className="h-10 text-[9px] font-black tracking-widest rounded-xl border-mare-navy/10"
-                  onClick={() => navigate('/mi-pedido')}
-                >
-                  VER PEDIDO
-                </Button>
-              </div>
-            )}
-          </div>
-          
-          {!isAvailable && (
-             <p className="mt-4 text-xs font-bold text-red-500 text-center bg-red-50 py-2 rounded-lg">
-               Este producto está temporalmente agotado.
-             </p>
+            </>
           )}
 
         </div>
@@ -893,24 +924,26 @@ export function ProductDetail() {
       )}
 
       {/* Barra Inferior Fija Móvil - Más Compacta */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col flex-1 shrink-0 min-w-0">
-             <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Total</span>
-             <span className="text-[15px] font-black text-mare-navy leading-none tracking-tighter whitespace-nowrap">
-               {formatPrice(totalPrice)}
-             </span>
+      {!config?.features?.catalogMode && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col flex-1 shrink-0 min-w-0">
+               <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Total</span>
+               <span className="text-[15px] font-black text-mare-navy leading-none tracking-tighter whitespace-nowrap">
+                 {formatPrice(totalPrice)}
+               </span>
+            </div>
+            <Button 
+              variant={addedRecently ? "outline" : "primary"} 
+              onClick={handleAddToCart}
+              disabled={!isAvailable || isAdding}
+              className={`flex-1 h-11 rounded-xl font-black text-[9px] tracking-widest shadow-md min-w-[130px] transition-all duration-300 ${isAdding ? 'opacity-90' : ''}`}
+            >
+              {isAdding ? 'AÑADIENDO...' : addedRecently ? '✓ AGREGADO' : !isAvailable ? 'AGOTADO' : 'AÑADIR AL PEDIDO'}
+            </Button>
           </div>
-          <Button 
-            variant={addedRecently ? "outline" : "primary"} 
-            onClick={handleAddToCart}
-            disabled={!isAvailable || isAdding}
-            className={`flex-1 h-11 rounded-xl font-black text-[9px] tracking-widest shadow-md min-w-[130px] transition-all duration-300 ${isAdding ? 'opacity-90' : ''}`}
-          >
-            {isAdding ? 'AÑADIENDO...' : addedRecently ? '✓ AGREGADO' : !isAvailable ? 'AGOTADO' : 'AÑADIR AL PEDIDO'}
-          </Button>
         </div>
-      </div>
+      )}
 
       {/* Visor de Imágenes (Zoom) */}
       <AnimatePresence>

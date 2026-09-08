@@ -58,6 +58,9 @@ class ConfigService {
             config.tiendaNombre = setting.value.tiendaNombre || config.tiendaNombre;
             config.eslogan = setting.value.eslogan || config.eslogan;
           }
+          if (setting.key === 'features') {
+            config.features = { ...config.features, ...setting.value };
+          }
         });
       }
     } catch (e) {
@@ -103,6 +106,9 @@ class ConfigService {
             tiendaNombre: newConfig.tiendaNombre || this.localConfig.tiendaNombre,
             eslogan: newConfig.eslogan || this.localConfig.eslogan
           });
+        }
+        if (newConfig.features) {
+          await this.saveSetting('features', newConfig.features);
         }
       } catch (e) {
         console.error('Error saving config to Supabase:', e);

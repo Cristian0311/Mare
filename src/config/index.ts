@@ -96,6 +96,7 @@ export const appConfig = {
     favorites: true,
     share: true,
     pwa: true,
-    usdConversion: true
+    usdConversion: true,
+    catalogMode: false // false: e-commerce normal (default), true: solo catálogo digital
   }
 };

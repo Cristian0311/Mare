@@ -36,6 +36,20 @@ const Divider = () => <div className="w-full border-b border-dashed border-mare-
 export function Checkout() {
   const navigate = useNavigate();
   const { items, totalItems } = useCart();
+  const [config, setConfig] = useState(configService.getConfigSync());
+
+  useEffect(() => {
+    const handleConfigUpdate = () => setConfig(configService.getConfigSync());
+    window.addEventListener('mare_config_updated', handleConfigUpdate);
+    return () => window.removeEventListener('mare_config_updated', handleConfigUpdate);
+  }, []);
+
+  useEffect(() => {
+    if (totalItems === 0 || config?.features?.catalogMode) {
+      navigate('/mi-pedido', { replace: true });
+    }
+  }, [totalItems, navigate, config]);
+
   const { currency: currentCurrency, formatPrice, convertPrice } = useCurrency();
   const { getBestPrice, activePromotions } = usePromotions();
   const { toast } = useToast();

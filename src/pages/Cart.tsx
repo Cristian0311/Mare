@@ -14,6 +14,8 @@ import { usePromotions } from '../contexts/PromotionContext';
 import { SEO } from '../components/ui/SEO';
 import { CartUpsell } from '../components/CartUpsell';
 
+import { configService } from '../services/config';
+
 export function Cart() {
   const { items, removeItem, updateQuantity, clearCart, totalItems } = useCart();
   const { formatPrice } = useCurrency();
@@ -22,6 +24,31 @@ export function Cart() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [config, setConfig] = useState(configService.getConfigSync());
+
+  useEffect(() => {
+    const handleConfigUpdate = () => setConfig(configService.getConfigSync());
+    window.addEventListener('mare_config_updated', handleConfigUpdate);
+    return () => window.removeEventListener('mare_config_updated', handleConfigUpdate);
+  }, []);
+
+  if (config?.features?.catalogMode) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+        <SEO title="Catálogo" description="Explora nuestro catálogo de productos en tienda física." />
+        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+          <ShoppingBag strokeWidth={1.5} className="h-10 w-10 text-gray-400" />
+        </div>
+        <h2 className="text-xl font-black text-mare-navy tracking-tight mb-2">Modo Catálogo Activo</h2>
+        <p className="text-sm font-medium text-gray-500 max-w-md mx-auto mb-8 leading-relaxed">
+          Las compras en línea están desactivadas actualmente. Por favor, visita nuestra tienda física para adquirir nuestros productos.
+        </p>
+        <Button onClick={() => navigate('/')} variant="primary" className="px-8 font-black uppercase tracking-widest text-[10px]">
+          Ver Catálogo
+        </Button>
+      </div>
+    );
+  }
 
   // Delivery estimation
   const { data: checkoutData } = useCheckoutForm();

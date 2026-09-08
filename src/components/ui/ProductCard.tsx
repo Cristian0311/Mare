@@ -14,6 +14,7 @@ import { usePromotions } from '../../contexts/PromotionContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { shareProduct, buildProductWhatsAppShare, copyToClipboard } from '../../utils/share';
 import { getProductPricing } from '../../utils/pricing';
+import { configService } from '../../services/config';
 
 interface ProductCardProps {
   product: Product;
@@ -40,6 +41,12 @@ function getProductRating(id: string): number {
 }
 
 export function ProductCard({ product, onAdd, onClick, highlight = '' }: ProductCardProps) {
+  const [config, setConfig] = React.useState(configService.getConfigSync());
+  React.useEffect(() => {
+    const handleConfigUpdate = () => setConfig(configService.getConfigSync());
+    window.addEventListener('mare_config_updated', handleConfigUpdate);
+    return () => window.removeEventListener('mare_config_updated', handleConfigUpdate);
+  }, []);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addItem } = useCart();
@@ -341,20 +348,22 @@ export function ProductCard({ product, onAdd, onClick, highlight = '' }: Product
               )}
             </div>
             
-            <Button 
-              id={`btn-add-${product.id}`}
-              variant="primary" 
-              size="sm"
-              onClick={handleAddClick}
-              className={`w-full sm:w-auto h-6 sm:h-[26px] px-2 sm:px-2.5 font-black text-[7px] sm:text-[8px] shadow-sm transition-all uppercase tracking-tighter rounded-lg shrink-0 ${
-                availKey === 'agotado' 
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300' 
-                  : 'group-hover:bg-mare-turquoise'
-              }`}
-              disabled={availKey === 'agotado'}
-            >
-              {availKey === 'agotado' ? 'AGOTADO' : 'AÑADIR'}
-            </Button>
+            {!config?.features?.catalogMode && (
+              <Button 
+                id={`btn-add-${product.id}`}
+                variant="primary" 
+                size="sm"
+                onClick={handleAddClick}
+                className={`w-full sm:w-auto h-6 sm:h-[26px] px-2 sm:px-2.5 font-black text-[7px] sm:text-[8px] shadow-sm transition-all uppercase tracking-tighter rounded-lg shrink-0 ${
+                  availKey === 'agotado' 
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300' 
+                    : 'group-hover:bg-mare-turquoise'
+                }`}
+                disabled={availKey === 'agotado'}
+              >
+                {availKey === 'agotado' ? 'AGOTADO' : 'AÑADIR'}
+              </Button>
+            )}
           </div>
         </div>
       </div>

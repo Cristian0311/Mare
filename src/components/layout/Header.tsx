@@ -127,18 +127,20 @@ export function Header() {
               <MessageCircle strokeWidth={1.5} className="h-4 w-4" />
             </IconButton>
 
-            <Button 
-              variant="primary" 
-              size="sm"
-              onClick={() => navigate('/mi-pedido')}
-              className="gap-2 px-4 rounded-full shrink-0 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all font-bold"
-            >
-              <ShoppingBag strokeWidth={1.5} className="h-3.5 w-3.5" />
-              <span className="text-xs">Mi pedido</span>
-              <span className="bg-white/20 px-1 py-0.5 rounded-full text-[10px] font-black min-w-[18px]">
-                {totalItems}
-              </span>
-            </Button>
+            {!config?.features?.catalogMode && (
+              <Button 
+                variant="primary" 
+                size="sm"
+                onClick={() => navigate('/mi-pedido')}
+                className="gap-2 px-4 rounded-full shrink-0 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all font-bold"
+              >
+                <ShoppingBag strokeWidth={1.5} className="h-3.5 w-3.5" />
+                <span className="text-xs">Mi pedido</span>
+                <span className="bg-white/20 px-1 py-0.5 rounded-full text-[10px] font-black min-w-[18px]">
+                  {totalItems}
+                </span>
+              </Button>
+            )}
           </div>
 
           {/* Acciones Mobile (Derecha) */}
@@ -159,15 +161,17 @@ export function Header() {
               </button>
             )}
 
-            <button 
-              onClick={() => navigate('/mi-pedido')}
-              className="relative p-2 text-mare-navy hover:scale-110 active:scale-95 transition-transform"
-            >
-              <ShoppingBag strokeWidth={1.5} className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-4 w-4 bg-mare-gold rounded-full border-2 border-white text-[9px] font-bold flex items-center justify-center text-yellow-900 transition-transform hover:scale-110">
-                {totalItems}
-              </span>
-            </button>
+            {!config?.features?.catalogMode && (
+              <button 
+                onClick={() => navigate('/mi-pedido')}
+                className="relative p-2 text-mare-navy hover:scale-110 active:scale-95 transition-transform"
+              >
+                <ShoppingBag strokeWidth={1.5} className="h-5 w-5" />
+                <span className="absolute top-1 right-1 h-4 w-4 bg-mare-gold rounded-full border-2 border-white text-[9px] font-bold flex items-center justify-center text-yellow-900 transition-transform hover:scale-110">
+                  {totalItems}
+                </span>
+              </button>
+            )}
           </div>
         </div>
         
