@@ -1,7 +1,7 @@
 import { configService } from '../services/config';
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Share2, ChevronRight, ArrowLeft, Heart, Check, Minus, Plus, ShoppingBag, X, Eye, Package, Truck, MessageCircle, ShieldCheck, DollarSign } from 'lucide-react';
+import { Share2, ChevronRight, ArrowLeft, Heart, Check, Minus, Plus, ShoppingBag, X, Eye, Package, Truck, MessageCircle, ShieldCheck, DollarSign, MapPin } from 'lucide-react';
 import { productService } from '../services/products';
 import { categoryService } from '../services/categories';
 import { Button } from '../components/ui/Button';
@@ -612,25 +612,53 @@ export function ProductDetail() {
                   <Package strokeWidth={2} className="w-5 h-5" />
                 </div>
               </div>
-              <h3 className="text-[11px] font-black text-mare-navy uppercase tracking-widest mb-2 text-center">Disponible en Tienda</h3>
-              <p className="text-xs text-gray-500 font-medium leading-relaxed text-center mb-5">
-                MARÉ funciona actualmente como un catálogo digital. Visítanos en nuestra tienda física para adquirir este producto.
+              <h3 className="text-[11px] font-black text-mare-navy uppercase tracking-widest mb-2 text-center">Disponible en Tienda Física</h3>
+              <p className="text-xs text-gray-500 font-medium leading-relaxed text-center mb-6">
+                Visítanos en nuestra tienda física para adquirir este producto, o consúltanos por WhatsApp si tienes alguna duda.
               </p>
               
-              {config?.delivery?.pickupLocations?.[0] && (
-                <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm text-left">
-                  <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Dirección Principal</h4>
-                  <p className="text-sm font-bold text-mare-navy leading-tight mb-1">
-                    {config.delivery.pickupLocations[0].name}
-                  </p>
-                  <p className="text-xs text-gray-500 mb-2">
-                    {config.delivery.pickupLocations[0].address}
-                  </p>
-                  <div className="text-[10px] font-black text-mare-gold uppercase tracking-widest">
-                    {config.delivery.pickupLocations[0].schedule}
+              <div className="space-y-3">
+                <Button 
+                  variant="primary" 
+                  className="w-full h-12 font-black tracking-widest text-[10px] rounded-xl shadow-md gap-2"
+                  onClick={() => {
+                    const priceText = formatPrice(pricing ? pricing.finalPrice : product.precioMN);
+                    const url = window.location.href;
+                    const msg = encodeURIComponent(`Hola MARÉ, me interesa este producto que vi en el catálogo:\n\n*${product.nombre}*\n*Precio:* ${priceText}\n\nEnlace: ${url}\n\n¿Me podrían dar más información?`);
+                    window.open(`https://wa.me/${config.whatsapp?.generalNumber?.replace(/\+/g, '')}?text=${msg}`, '_blank');
+                  }}
+                >
+                  <MessageCircle strokeWidth={2} className="w-4 h-4" />
+                  PREGUNTAR POR ESTE PRODUCTO
+                </Button>
+
+                {config?.delivery?.pickupLocations?.[0] && (
+                  <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm text-left mt-4">
+                    <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Dirección Principal</h4>
+                    <p className="text-sm font-bold text-mare-navy leading-tight mb-1">
+                      {config.delivery.pickupLocations[0].name}
+                    </p>
+                    <p className="text-xs text-gray-500 mb-2">
+                      {config.delivery.pickupLocations[0].address}
+                    </p>
+                    <div className="text-[10px] font-black text-mare-gold uppercase tracking-widest mb-3">
+                      {config.delivery.pickupLocations[0].schedule}
+                    </div>
+
+                    {config.delivery.pickupLocations[0].mapsUrl && (
+                      <a 
+                        href={config.delivery.pickupLocations[0].mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-mare-navy font-bold text-[10px] uppercase tracking-wider transition-colors"
+                      >
+                        <MapPin strokeWidth={2} className="w-3.5 h-3.5 text-mare-gold" />
+                        Ver en Google Maps
+                      </a>
+                    )}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ) : (
             <>

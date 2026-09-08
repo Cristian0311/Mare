@@ -7,6 +7,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { configService } from '../../services/config';
 import { InfoTrigger } from '../components/InfoTrigger';
 import { motion, AnimatePresence } from 'framer-motion';
+import { QRCodeCanvas } from 'qrcode.react';
 
 type SettingSection = 'store' | 'currency' | 'maintenance';
 
@@ -21,6 +22,7 @@ export function AdminSettings() {
   const [generalNumberError, setGeneralNumberError] = useState('');
   const [exchangeRateUSD, setExchangeRateUSD] = useState(320);
   const [catalogMode, setCatalogMode] = useState(false);
+  const [mapsUrl, setMapsUrl] = useState('');
 
   useEffect(() => {
     loadConfig();
@@ -34,6 +36,7 @@ export function AdminSettings() {
       setGeneralNumber(cfg.whatsapp?.generalNumber || '+5355555555');
       setExchangeRateUSD(cfg.currency?.exchangeRateUSD || 320);
       setCatalogMode(cfg.features?.catalogMode || false);
+      setMapsUrl(cfg.delivery?.pickupLocations?.[0]?.mapsUrl || '');
     } catch (e) {
       console.error('Error loading config:', e);
     }
@@ -49,16 +52,26 @@ export function AdminSettings() {
     
     setIsSaving(true);
     try {
+      const currentConfig = configService.getConfigSync();
+      const newPickupLocations = [...(currentConfig.delivery?.pickupLocations || [])];
+      if (newPickupLocations.length > 0) {
+        newPickupLocations[0] = { ...newPickupLocations[0], mapsUrl };
+      }
+
       await configService.updateConfig({
         tiendaNombre,
         eslogan,
         whatsapp: {
-          ...configService.getConfigSync().whatsapp,
+          ...currentConfig.whatsapp,
           generalNumber
         },
         features: {
-          ...configService.getConfigSync().features,
+          ...currentConfig.features,
           catalogMode
+        },
+        delivery: {
+          ...currentConfig.delivery,
+          pickupLocations: newPickupLocations
         }
       });
       success('Configuración Guardada', 'La información general de la tienda ha sido actualizada.');
@@ -78,6 +91,19 @@ export function AdminSettings() {
       error('Error', 'No se pudo actualizar la tasa de cambio.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const downloadQR = () => {
+    const canvas = document.getElementById('catalog-qr-code') as HTMLCanvasElement;
+    if (canvas) {
+      const pngUrl = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+      const downloadLink = document.createElement('a');
+      downloadLink.href = pngUrl;
+      downloadLink.download = 'mare-catalogo-qr.png';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
     }
   };
 
@@ -242,6 +268,70 @@ export function AdminSettings() {
                         </p>
                       </div>
                     </div>
+
+                    <AnimatePresence>
+                      {catalogMode && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-6 space-y-6"
+                        >
+                          <div className="space-y-2">
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Enlace de Google Maps (Ubicación GPS)</label>
+                            <input 
+                              type="url" 
+                              value={mapsUrl}
+                              onChange={(e) => setMapsUrl(e.target.value)}
+                              placeholder="Ej: https://maps.app.goo.gl/..."
+                              className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
+                            />
+                            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-2 ml-1 leading-relaxed">
+                              Este enlace aparecerá en la página del producto para ayudar a los clientes a llegar a la tienda física.
+                            </p>
+                          </div>
+
+                          <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
+                            <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
+                              <QRCodeCanvas
+                                id="catalog-qr-code"
+                                value={window.location.origin}
+                                size={180}
+                                bgColor={"#ffffff"}
+                                fgColor={"#0f172a"}
+                                level={"H"}
+                                imageSettings={{
+                                  src: "/icon.svg",
+                                  x: undefined,
+                                  y: undefined,
+                                  height: 40,
+                                  width: 40,
+                                  excavate: true,
+                                }}
+                              />
+                            </div>
+                            <div className="flex-1 text-center md:text-left space-y-4">
+                              <div>
+                                <h4 className="text-sm font-black text-mare-navy tracking-tight mb-2">Código QR del Catálogo</h4>
+                                <p className="text-xs text-gray-500 font-medium leading-relaxed">
+                                  Imprime este código QR y colócalo en tu tienda física. Tus clientes podrán escanearlo con sus teléfonos móviles para navegar por el catálogo digital de tus productos, ver precios y descripciones actualizadas al instante.
+                                </p>
+                              </div>
+                              <div className="flex justify-center md:justify-start">
+                                <button
+                                  type="button"
+                                  onClick={downloadQR}
+                                  className="flex items-center rounded-2xl px-6 py-3 font-black uppercase tracking-widest text-[10px] bg-white border-2 border-gray-100 hover:border-mare-navy text-mare-navy transition-all active:scale-95"
+                                >
+                                  <Save size={14} className="mr-2" />
+                                  Descargar QR para Imprimir
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
 

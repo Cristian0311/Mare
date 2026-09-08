@@ -24,6 +24,7 @@
     "motion": "^13.1.0",
     "node-cron": "^4.6.0",
     "phosphor-react": "^1.4.1",
+    "qrcode.react": "^4.2.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-easy-crop": "^6.2.3",
