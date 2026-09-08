@@ -26,7 +26,7 @@ export function Footer() {
             </div>
             <p className="text-mare-turquoise font-medium">{config.eslogan}</p>
             
-            {config.features?.catalogMode && config.delivery?.pickupLocations?.[0] && (
+            {config.delivery?.pickupLocations?.[0]?.address && (
               <div className="mt-6 text-left bg-white/5 rounded-xl p-4 border border-white/10 max-w-sm">
                 <h4 className="text-[10px] font-black text-mare-turquoise uppercase tracking-widest mb-2">Visítanos en nuestra tienda</h4>
                 <p className="text-sm font-bold text-white leading-tight mb-1">

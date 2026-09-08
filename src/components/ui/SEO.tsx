@@ -1,4 +1,6 @@
 import { Helmet } from 'react-helmet-async';
+import { useState, useEffect } from 'react';
+import { configService } from '../../services/config';
 
 interface SEOProps {
   title?: string;
@@ -25,14 +27,25 @@ export function SEO({
   structuredData,
   productData
 }: SEOProps) {
+  const [seoSettings, setSeoSettings] = useState<any>(null);
   const siteName = 'MARÉ';
-  const defaultTitle = `${siteName} — Tu tienda online en Cuba`;
-  const defaultDescription = 'Encuentra todo lo que buscas en MARÉ. Tu tienda online de confianza con ofertas, categorías y los mejores productos.';
+
+  useEffect(() => {
+    const loadSeo = async () => {
+      const settings = await configService.getSeoSettings();
+      if (settings) setSeoSettings(settings);
+    };
+    loadSeo();
+  }, []);
+
+  const defaultTitle = seoSettings?.title || `${siteName} — Tu tienda online en Cuba`;
+  const defaultDescription = seoSettings?.description || 'Encuentra todo lo que buscas en MARÉ. Tu tienda online de confianza con ofertas, categorías y los mejores productos.';
   const defaultUrl = 'https://mare-a8w2.onrender.com';
-  const defaultImage = `${defaultUrl}/icon.svg`; // Replace with a 1200x630 OG image if available later
+  const defaultImage = `${defaultUrl}/icon.svg`; 
 
   const seoTitle = title ? `${siteName} | ${title}` : defaultTitle;
   const seoDescription = description || defaultDescription;
+  const seoKeywords = seoSettings?.keywords || '';
   
   // Use provided canonical, or fallback to the real domain path, without query params
   const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -45,6 +58,7 @@ export function SEO({
       {/* Basic Meta */}
       <title>{seoTitle}</title>
       <meta name="description" content={seoDescription} />
+      {seoKeywords && <meta name="keywords" content={seoKeywords} />}
       {/* Canonical */}
       <link rel="canonical" href={seoUrl} />
       

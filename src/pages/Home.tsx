@@ -5,7 +5,7 @@ import { SectionTitle } from '../components/ui/SectionTitle';
 import { ProductCarousel } from '../components/ui/ProductCarousel';
 import { Button } from '../components/ui/Button';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShieldCheck, Truck, MessageCircle, ShoppingBag, Users, Package } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Truck, MessageCircle, ShoppingBag, Users, Package, MapPin } from 'lucide-react';
 import { Logo } from '../components/ui/Logo';
 import { configService } from '../services/config';
 import { bundleService } from '../services/bundleService';
@@ -275,14 +275,14 @@ export function Home() {
         <ProductRecommendations type="recently_viewed" title="Visto Recientemente" />
       </section>
 
-      {/* 7. Sección MARÉ (Confianza compacta) */}
+      {/* Sección MARÉ (Confianza compacta) */}
       <section className="bg-gray-50 border border-gray-100 rounded-3xl p-6 md:p-10 text-center flex flex-col items-center">
         <Logo className="mb-4 scale-110" />
         <p className="text-sm md:text-base text-gray-500 font-medium max-w-xl leading-relaxed mb-8">
           Encuentra productos de diferentes categorías en un solo lugar, con una experiencia sencilla y pensada para ti.
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-3xl">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-3xl mb-8">
           <div className="flex flex-col items-center p-4 bg-white rounded-2xl border border-gray-100">
             <Truck className="h-5 w-5 text-mare-green mb-2" />
             <span className="text-[10px] font-bold text-mare-navy tracking-wider uppercase">Entrega Rápida</span>
@@ -300,6 +300,36 @@ export function Home() {
             <span className="text-[10px] font-bold text-mare-navy tracking-wider uppercase">Garantía Total</span>
           </div>
         </div>
+
+        {/* Bloque de Ubicación Física */}
+        {config.delivery?.pickupLocations?.[0]?.address && (
+          <div className="w-full max-w-2xl bg-white rounded-[2rem] border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-mare-gold/10 flex items-center justify-center text-mare-gold shrink-0">
+              <MapPin strokeWidth={2.5} className="w-6 h-6" />
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <h4 className="text-[10px] font-black text-mare-gold uppercase tracking-[0.2em] mb-1">Visítanos en nuestra tienda</h4>
+              <h3 className="text-lg font-black text-mare-navy tracking-tight mb-1">{config.delivery.pickupLocations[0].name}</h3>
+              <p className="text-xs text-gray-500 font-medium mb-2">{config.delivery.pickupLocations[0].address}</p>
+              <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <div className="w-1 h-1 rounded-full bg-gray-300"></div>
+                  {config.delivery.pickupLocations[0].schedule}
+                </span>
+              </div>
+            </div>
+            {config.delivery.pickupLocations[0].mapsUrl && (
+              <a 
+                href={config.delivery.pickupLocations[0].mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full md:w-auto px-6 py-3 bg-mare-navy text-white font-black text-[9px] uppercase tracking-widest rounded-xl hover:bg-black transition-all shadow-lg shadow-mare-navy/10 active:scale-95"
+              >
+                VER EN MAPS
+              </a>
+            )}
+          </div>
+        )}
       </section>
 
       {/* 8. Recomendados */}

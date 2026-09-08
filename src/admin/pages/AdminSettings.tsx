@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Save, AlertCircle, RefreshCw, ShoppingBag, DollarSign, 
-  Shield, CheckCircle, ChevronRight
+  Shield, CheckCircle, ChevronRight, Search
 } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import { configService } from '../../services/config';
@@ -9,7 +9,7 @@ import { InfoTrigger } from '../components/InfoTrigger';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeCanvas } from 'qrcode.react';
 
-type SettingSection = 'store' | 'currency' | 'maintenance';
+type SettingSection = 'store' | 'currency' | 'seo' | 'maintenance';
 
 export function AdminSettings() {
   const [activeSection, setActiveSection] = useState<SettingSection>('store');
@@ -23,6 +23,14 @@ export function AdminSettings() {
   const [exchangeRateUSD, setExchangeRateUSD] = useState(320);
   const [catalogMode, setCatalogMode] = useState(false);
   const [mapsUrl, setMapsUrl] = useState('');
+  const [storeAddress, setStoreAddress] = useState('');
+  const [storeName, setStoreName] = useState('');
+  const [storeSchedule, setStoreSchedule] = useState('');
+
+  // SEO states
+  const [seoTitle, setSeoTitle] = useState('');
+  const [seoDescription, setSeoDescription] = useState('');
+  const [seoKeywords, setSeoKeywords] = useState('');
 
   useEffect(() => {
     loadConfig();
@@ -36,7 +44,20 @@ export function AdminSettings() {
       setGeneralNumber(cfg.whatsapp?.generalNumber || '+5355555555');
       setExchangeRateUSD(cfg.currency?.exchangeRateUSD || 320);
       setCatalogMode(cfg.features?.catalogMode || false);
-      setMapsUrl(cfg.delivery?.pickupLocations?.[0]?.mapsUrl || '');
+      
+      const primaryLoc = cfg.delivery?.pickupLocations?.[0];
+      setMapsUrl(primaryLoc?.mapsUrl || '');
+      setStoreAddress(primaryLoc?.address || '');
+      setStoreName(primaryLoc?.name || '');
+      setStoreSchedule(primaryLoc?.schedule || 'Lunes a Sábado: 10:00 AM - 6:00 PM');
+
+      // Load SEO
+      const seo = await configService.getSeoSettings();
+      if (seo) {
+        setSeoTitle(seo.title || '');
+        setSeoDescription(seo.description || '');
+        setSeoKeywords(seo.keywords || '');
+      }
     } catch (e) {
       console.error('Error loading config:', e);
     }
@@ -54,8 +75,20 @@ export function AdminSettings() {
     try {
       const currentConfig = configService.getConfigSync();
       const newPickupLocations = [...(currentConfig.delivery?.pickupLocations || [])];
+      
+      const locationData = {
+        id: 'primary-store',
+        name: storeName || tiendaNombre,
+        address: storeAddress,
+        schedule: storeSchedule,
+        mapsUrl,
+        active: true
+      };
+
       if (newPickupLocations.length > 0) {
-        newPickupLocations[0] = { ...newPickupLocations[0], mapsUrl };
+        newPickupLocations[0] = { ...newPickupLocations[0], ...locationData };
+      } else {
+        newPickupLocations.push(locationData);
       }
 
       await configService.updateConfig({
@@ -94,6 +127,22 @@ export function AdminSettings() {
     }
   };
 
+  const handleSaveSeo = async () => {
+    setIsSaving(true);
+    try {
+      await configService.updateSeoSettings({
+        title: seoTitle,
+        description: seoDescription,
+        keywords: seoKeywords
+      });
+      success('SEO Actualizado', 'Los metadatos para buscadores han sido guardados.');
+    } catch (e) {
+      error('Error', 'No se pudo actualizar el SEO.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const downloadQR = () => {
     const canvas = document.getElementById('catalog-qr-code') as HTMLCanvasElement;
     if (canvas) {
@@ -118,6 +167,7 @@ export function AdminSettings() {
   const sections = [
     { id: 'store', label: 'Tienda & Marca', icon: ShoppingBag },
     { id: 'currency', label: 'Monedas & Tasa', icon: DollarSign },
+    { id: 'seo', label: 'SEO & Google', icon: Search },
     { id: 'maintenance', label: 'Mantenimiento', icon: Shield },
   ];
 
@@ -277,18 +327,53 @@ export function AdminSettings() {
                           exit={{ opacity: 0, height: 0 }}
                           className="mt-6 space-y-6"
                         >
-                          <div className="space-y-2">
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Enlace de Google Maps (Ubicación GPS)</label>
-                            <input 
-                              type="url" 
-                              value={mapsUrl}
-                              onChange={(e) => setMapsUrl(e.target.value)}
-                              placeholder="Ej: https://maps.app.goo.gl/..."
-                              className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
-                            />
-                            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-2 ml-1 leading-relaxed">
-                              Este enlace aparecerá en la página del producto para ayudar a los clientes a llegar a la tienda física.
-                            </p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nombre del Local</label>
+                              <input 
+                                type="text" 
+                                value={storeName}
+                                onChange={(e) => setStoreName(e.target.value)}
+                                placeholder="Ej: MARÉ Store La Habana"
+                                className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Horario de Atención</label>
+                              <input 
+                                type="text" 
+                                value={storeSchedule}
+                                onChange={(e) => setStoreSchedule(e.target.value)}
+                                placeholder="Ej: Lunes a Sábado: 10:00 AM - 6:00 PM"
+                                className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
+                              />
+                            </div>
+
+                            <div className="md:col-span-2 space-y-2">
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Dirección Escrita</label>
+                              <textarea 
+                                value={storeAddress}
+                                onChange={(e) => setStoreAddress(e.target.value)}
+                                placeholder="Ej: Calle 23 #456, entre H e I, Vedado, La Habana."
+                                rows={2}
+                                className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all resize-none"
+                              />
+                            </div>
+
+                            <div className="md:col-span-2 space-y-2">
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Enlace de Google Maps (Ubicación GPS)</label>
+                              <input 
+                                type="url" 
+                                value={mapsUrl}
+                                onChange={(e) => setMapsUrl(e.target.value)}
+                                placeholder="Ej: https://maps.app.goo.gl/..."
+                                className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
+                              />
+                              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-2 ml-1 leading-relaxed">
+                                Este enlace aparecerá en la página del producto para ayudar a los clientes a llegar a la tienda física.
+                              </p>
+                            </div>
                           </div>
 
                           <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
@@ -390,6 +475,64 @@ export function AdminSettings() {
                   >
                     <Save size={16} className="mr-2.5" />
                     {isSaving ? 'Guardando...' : 'Fijar Nueva Tasa'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'seo' && (
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-base font-black text-mare-navy uppercase tracking-widest flex items-center gap-2">
+                    Posicionamiento & Buscadores
+                    <InfoTrigger title="SEO" text="Configura cómo aparece tu tienda en Google, Facebook y otros buscadores." />
+                  </h3>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1.5">Optimización de visibilidad digital</p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Título SEO (Meta Title)</label>
+                    <input 
+                      type="text" 
+                      value={seoTitle}
+                      onChange={(e) => setSeoTitle(e.target.value)}
+                      placeholder="Ej: MARÉ | Boutique Online de Moda y Accesorios en Cuba"
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Descripción SEO (Meta Description)</label>
+                    <textarea 
+                      value={seoDescription}
+                      onChange={(e) => setSeoDescription(e.target.value)}
+                      placeholder="Ej: Descubre la mejor selección de moda, tecnología y hogar en MARÉ. Envíos a toda La Habana y atención personalizada por WhatsApp."
+                      rows={3}
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all resize-none"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Palabras Clave (Separadas por comas)</label>
+                    <input 
+                      type="text" 
+                      value={seoKeywords}
+                      onChange={(e) => setSeoKeywords(e.target.value)}
+                      placeholder="Ej: moda, cuba, la habana, compras online, whatsapp, mare"
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-8 border-t border-gray-50">
+                  <button
+                    onClick={handleSaveSeo}
+                    disabled={isSaving}
+                    className="flex items-center rounded-2xl px-8 py-4 font-black uppercase tracking-widest text-[10px] bg-mare-navy hover:bg-black text-white shadow-xl shadow-mare-navy/10 transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    <Save size={16} className="mr-2.5" />
+                    {isSaving ? 'Guardando...' : 'Guardar SEO'}
                   </button>
                 </div>
               </div>
