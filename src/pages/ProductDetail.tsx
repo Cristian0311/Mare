@@ -14,6 +14,7 @@ import { useCurrency } from '../contexts/CurrencyContext';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { usePromotions } from '../contexts/PromotionContext';
 import { useToast } from '../contexts/ToastContext';
+import { useWhatsApp } from '../contexts/WhatsAppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { shareProduct, buildProductWhatsAppShare, copyToClipboard } from '../utils/share';
 import { getProductPricing } from '../utils/pricing';
@@ -87,6 +88,7 @@ export function ProductDetail() {
   const { toggleFavorite, isFavorite } = useFavorites();
   const { getBestPrice } = usePromotions();
   const { toast } = useToast();
+  const { openWhatsApp } = useWhatsApp();
 
   const product = useMemo(() => 
     slug ? productService.getProductBySlugSync(slug) : undefined
@@ -624,8 +626,8 @@ export function ProductDetail() {
                   onClick={() => {
                     const priceText = formatPrice(pricing ? pricing.finalPrice : product.precioMN);
                     const url = window.location.href;
-                    const msg = encodeURIComponent(`Hola MARÉ, me interesa este producto que vi en el catálogo:\n\n*${product.nombre}*\n*Precio:* ${priceText}\n\nEnlace: ${url}\n\n¿Me podrían dar más información?`);
-                    window.open(`https://wa.me/${config.whatsapp?.generalNumber?.replace(/\+/g, '')}?text=${msg}`, '_blank');
+                    const msg = `Hola MARÉ, me interesa este producto que vi en el catálogo:\n\n*${product.nombre}*\n*Precio:* ${priceText}\n\nEnlace: ${url}\n\n¿Me podrían dar más información?`;
+                    openWhatsApp(msg);
                   }}
                 >
                   <MessageCircle strokeWidth={2} className="w-4 h-4" />
