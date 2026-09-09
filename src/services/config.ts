@@ -83,32 +83,73 @@ class ConfigService {
    * Actualiza la configuración local y en DB
    */
   async updateConfig(newConfig: Partial<typeof defaultConfig>) {
-    this.localConfig = { ...this.localConfig, ...newConfig };
+    // Deep merge current local config with new updates
+    const updatedConfig = { ...this.localConfig };
+    
+    // Manual deep merge for known nested objects to avoid overwriting them entirely
+    if (newConfig.features) {
+      updatedConfig.features = { ...updatedConfig.features, ...newConfig.features };
+    }
+    if (newConfig.whatsapp) {
+      updatedConfig.whatsapp = { ...updatedConfig.whatsapp, ...newConfig.whatsapp };
+    }
+    if (newConfig.wholesale) {
+      updatedConfig.wholesale = { ...updatedConfig.wholesale, ...newConfig.wholesale };
+    }
+    if (newConfig.reservation) {
+      updatedConfig.reservation = { ...updatedConfig.reservation, ...newConfig.reservation };
+    }
+    if (newConfig.delivery) {
+      updatedConfig.delivery = { ...updatedConfig.delivery, ...newConfig.delivery };
+    }
+    if (newConfig.currency) {
+      updatedConfig.currency = { ...updatedConfig.currency, ...newConfig.currency };
+    }
+    if (newConfig.store) {
+      updatedConfig.store = { ...updatedConfig.store, ...newConfig.store };
+    }
+    
+    // Apply top-level properties
+    Object.assign(updatedConfig, {
+      ...newConfig,
+      features: updatedConfig.features,
+      whatsapp: updatedConfig.whatsapp,
+      wholesale: updatedConfig.wholesale,
+      reservation: updatedConfig.reservation,
+      delivery: updatedConfig.delivery,
+      currency: updatedConfig.currency,
+      store: updatedConfig.store
+    });
+
+    this.localConfig = updatedConfig;
     localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(this.localConfig));
 
     if (isConfigured) {
       try {
-        // Guardar partes específicas en store_settings
-        if (newConfig.whatsapp) {
-          await this.saveSetting('whatsapp', newConfig.whatsapp);
+        // Save merged parts to store_settings
+        if (newConfig.whatsapp || updatedConfig.whatsapp) {
+          await this.saveSetting('whatsapp', updatedConfig.whatsapp);
         }
-        if (newConfig.wholesale) {
-          await this.saveSetting('wholesale', newConfig.wholesale);
+        if (newConfig.wholesale || updatedConfig.wholesale) {
+          await this.saveSetting('wholesale', updatedConfig.wholesale);
         }
-        if (newConfig.reservation) {
-          await this.saveSetting('reservation', newConfig.reservation);
+        if (newConfig.reservation || updatedConfig.reservation) {
+          await this.saveSetting('reservation', updatedConfig.reservation);
         }
-        if (newConfig.delivery) {
-          await this.saveSetting('delivery', newConfig.delivery);
+        if (newConfig.delivery || updatedConfig.delivery) {
+          await this.saveSetting('delivery', updatedConfig.delivery);
         }
         if (newConfig.tiendaNombre || newConfig.eslogan) {
           await this.saveSetting('general', {
-            tiendaNombre: newConfig.tiendaNombre || this.localConfig.tiendaNombre,
-            eslogan: newConfig.eslogan || this.localConfig.eslogan
+            tiendaNombre: updatedConfig.tiendaNombre,
+            eslogan: updatedConfig.eslogan
           });
         }
-        if (newConfig.features) {
-          await this.saveSetting('features', newConfig.features);
+        if (newConfig.features || updatedConfig.features) {
+          await this.saveSetting('features', updatedConfig.features);
+        }
+        if (newConfig.store || updatedConfig.store) {
+          await this.saveSetting('store', updatedConfig.store);
         }
       } catch (e) {
         console.error('Error saving config to Supabase:', e);

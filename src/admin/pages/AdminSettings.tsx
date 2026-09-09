@@ -18,6 +18,7 @@ export function AdminSettings() {
 
   const [tiendaNombre, setTiendaNombre] = useState('MARÉ');
   const [eslogan, setEslogan] = useState('Todo lo que buscas');
+  const [tiendaLogo, setTiendaLogo] = useState('/icon.svg');
   const [generalNumber, setGeneralNumber] = useState('+5355555555');
   const [generalNumberError, setGeneralNumberError] = useState('');
   const [exchangeRateUSD, setExchangeRateUSD] = useState(320);
@@ -41,6 +42,7 @@ export function AdminSettings() {
       const cfg = await configService.getConfig();
       setTiendaNombre(cfg.tiendaNombre || 'MARÉ');
       setEslogan(cfg.eslogan || 'Todo lo que buscas');
+      setTiendaLogo(cfg.store?.logo || '/icon.svg');
       setGeneralNumber(cfg.whatsapp?.generalNumber || '+5355555555');
       setExchangeRateUSD(cfg.currency?.exchangeRateUSD || 320);
       setCatalogMode(cfg.features?.catalogMode || false);
@@ -94,6 +96,12 @@ export function AdminSettings() {
       await configService.updateConfig({
         tiendaNombre,
         eslogan,
+        store: {
+          ...currentConfig.store,
+          name: tiendaNombre,
+          slogan: eslogan,
+          logo: tiendaLogo
+        },
         whatsapp: {
           ...currentConfig.whatsapp,
           generalNumber
@@ -259,6 +267,22 @@ export function AdminSettings() {
                   </div>
 
                   <div className="md:col-span-2 space-y-2">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">URL del Logotipo (SVG o PNG transparente)</label>
+                    <div className="flex gap-4 items-center">
+                      <input 
+                        type="text" 
+                        value={tiendaLogo}
+                        onChange={(e) => setTiendaLogo(e.target.value)}
+                        placeholder="/icon.svg"
+                        className="flex-1 px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
+                      />
+                      <div className="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden p-2">
+                        <img src={tiendaLogo} alt="Preview" className="max-w-full max-h-full object-contain" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2 space-y-2">
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Canal WhatsApp Central</label>
                     <div className="relative">
                       <input 
@@ -298,6 +322,59 @@ export function AdminSettings() {
                   </div>
 
                   <div className="md:col-span-2 pt-6 border-t border-gray-100">
+                    <h4 className="text-sm font-black text-mare-navy uppercase tracking-widest mb-4 flex items-center gap-2">
+                      Ubicación Física de la Tienda
+                      <InfoTrigger title="Tienda Física" text="Esta dirección aparecerá en el inicio y el footer del sitio." />
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nombre del Local</label>
+                        <input 
+                          type="text" 
+                          value={storeName}
+                          onChange={(e) => setStoreName(e.target.value)}
+                          placeholder="Ej: MARÉ Store La Habana"
+                          className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Horario de Atención</label>
+                        <input 
+                          type="text" 
+                          value={storeSchedule}
+                          onChange={(e) => setStoreSchedule(e.target.value)}
+                          placeholder="Ej: Lunes a Sábado: 10:00 AM - 6:00 PM"
+                          className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2 space-y-2">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Dirección Escrita</label>
+                        <textarea 
+                          value={storeAddress}
+                          onChange={(e) => setStoreAddress(e.target.value)}
+                          placeholder="Ej: Calle 23 #456, entre H e I, Vedado, La Habana."
+                          rows={2}
+                          className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all resize-none"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2 space-y-2">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Enlace de Google Maps (Ubicación GPS)</label>
+                        <input 
+                          type="url" 
+                          value={mapsUrl}
+                          onChange={(e) => setMapsUrl(e.target.value)}
+                          placeholder="Ej: https://maps.app.goo.gl/..."
+                          className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2 pt-6 border-t border-gray-100">
                     <div className="flex items-start gap-4">
                       <div className="pt-1">
                         <label className="relative inline-flex items-center cursor-pointer">
@@ -327,55 +404,6 @@ export function AdminSettings() {
                           exit={{ opacity: 0, height: 0 }}
                           className="mt-6 space-y-6"
                         >
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                            <div className="space-y-2">
-                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nombre del Local</label>
-                              <input 
-                                type="text" 
-                                value={storeName}
-                                onChange={(e) => setStoreName(e.target.value)}
-                                placeholder="Ej: MARÉ Store La Habana"
-                                className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Horario de Atención</label>
-                              <input 
-                                type="text" 
-                                value={storeSchedule}
-                                onChange={(e) => setStoreSchedule(e.target.value)}
-                                placeholder="Ej: Lunes a Sábado: 10:00 AM - 6:00 PM"
-                                className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
-                              />
-                            </div>
-
-                            <div className="md:col-span-2 space-y-2">
-                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Dirección Escrita</label>
-                              <textarea 
-                                value={storeAddress}
-                                onChange={(e) => setStoreAddress(e.target.value)}
-                                placeholder="Ej: Calle 23 #456, entre H e I, Vedado, La Habana."
-                                rows={2}
-                                className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all resize-none"
-                              />
-                            </div>
-
-                            <div className="md:col-span-2 space-y-2">
-                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Enlace de Google Maps (Ubicación GPS)</label>
-                              <input 
-                                type="url" 
-                                value={mapsUrl}
-                                onChange={(e) => setMapsUrl(e.target.value)}
-                                placeholder="Ej: https://maps.app.goo.gl/..."
-                                className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50/30 font-black text-sm text-mare-navy focus:ring-4 focus:ring-mare-turquoise/5 focus:border-mare-turquoise outline-none transition-all"
-                              />
-                              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-2 ml-1 leading-relaxed">
-                                Este enlace aparecerá en la página del producto para ayudar a los clientes a llegar a la tienda física.
-                              </p>
-                            </div>
-                          </div>
-
                           <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
                             <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
                               <QRCodeCanvas
@@ -386,7 +414,7 @@ export function AdminSettings() {
                                 fgColor={"#0f172a"}
                                 level={"H"}
                                 imageSettings={{
-                                  src: "/icon.svg",
+                                  src: tiendaLogo,
                                   x: undefined,
                                   y: undefined,
                                   height: 40,

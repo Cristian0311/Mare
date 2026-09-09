@@ -71,17 +71,17 @@ const catalogFaqs = [
       {
         id: 'q1',
         title: '¿Cómo adquiero un producto del catálogo?',
-        content: 'Actualmente funcionamos como catálogo digital. Visítanos en nuestra tienda física para ver, probar y comprar los productos directamente.'
+        content: 'Actualmente funcionamos como catálogo digital para que explores nuestra colección. Visítanos en nuestra tienda física para ver, probar y comprar los productos directamente con atención personalizada.'
       },
       {
         id: 'q2',
         title: '¿Puedo reservar un producto online?',
-        content: 'Las compras online están desactivadas. Para cualquier duda, reserva o consulta sobre disponibilidad, puedes tocar el botón "Preguntar por este producto" y contactar a nuestros asesores vía WhatsApp.'
+        content: 'Las compras online directas están desactivadas en este modo. Para cualquier duda, reserva o consulta sobre disponibilidad, puedes tocar el botón "Preguntar por este producto" en la ficha del artículo y contactar a nuestros asesores vía WhatsApp.'
       },
       {
         id: 'q3',
         title: '¿Tienen la misma disponibilidad en la tienda física?',
-        content: 'Nuestro catálogo se actualiza constantemente para reflejar el inventario de nuestra tienda. Te sugerimos confirmar la disponibilidad por WhatsApp antes de visitarnos.'
+        content: 'Nuestro catálogo se actualiza constantemente para reflejar el inventario de nuestra tienda. Te sugerimos confirmar la disponibilidad por WhatsApp antes de visitarnos para asegurar tu artículo.'
       }
     ]
   },
@@ -91,12 +91,12 @@ const catalogFaqs = [
       {
         id: 'q4',
         title: '¿Dónde están ubicados?',
-        content: 'Puedes encontrar nuestra dirección exacta y enlace de Google Maps en la información de cualquier producto o en la parte inferior de esta página web.'
+        content: 'Nuestra tienda física se encuentra en la dirección especificada en el pie de página de nuestra web. Allí mismo encontrarás el enlace directo a Google Maps y nuestros horarios de atención actualizados.'
       },
       {
         id: 'q5',
         title: '¿Qué métodos de pago aceptan en la tienda?',
-        content: 'En nuestra tienda física aceptamos pagos en efectivo, transferencias bancarias y otros métodos convenidos. Consulta con un asesor para más detalles.'
+        content: 'En nuestra tienda física aceptamos pagos en efectivo (MN y USD), transferencias bancarias y otros métodos según disponibilidad. Consulta con un asesor por WhatsApp si tienes dudas específicas.'
       }
     ]
   }

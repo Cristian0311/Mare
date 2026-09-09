@@ -48,25 +48,25 @@ const catalogSteps = [
   {
     number: '01',
     title: 'Explora el Catálogo',
-    description: 'Navega por las categorías para ver todo lo que tenemos disponible actualmente en nuestra tienda.',
+    description: 'Navega por las categorías para ver todo lo que tenemos disponible actualmente. El catálogo se actualiza en tiempo real con nuestra tienda.',
     icon: <Search className="h-6 w-6" />
   },
   {
     number: '02',
-    title: 'Consulta',
-    description: 'Si te interesa algún producto, presiona "Preguntar por este producto" para contactar a un asesor.',
+    title: 'Consulta Dudas',
+    description: 'Si te interesa algún producto o quieres confirmar disponibilidad, presiona "Preguntar por este producto" para hablar con un asesor por WhatsApp.',
     icon: <MessageCircle className="h-6 w-6" />
   },
   {
     number: '03',
-    title: 'Visítanos',
-    description: 'Encuentra nuestra dirección y horario en el pie de página o detalles del producto y visítanos.',
+    title: 'Visita la Tienda',
+    description: 'Encuentra nuestra ubicación exacta en el pie de página de la web y visítanos para ver los productos físicamente.',
     icon: <MapPin className="h-6 w-6" />
   },
   {
     number: '04',
-    title: 'Compra en Tienda',
-    description: 'Adquiere los productos directamente en nuestro local físico con la mejor atención.',
+    title: 'Compra Directa',
+    description: 'Adquiere tus productos favoritos directamente en nuestro local físico con atención personalizada y garantía inmediata.',
     icon: <ShoppingBag className="h-6 w-6" />
   }
 ];

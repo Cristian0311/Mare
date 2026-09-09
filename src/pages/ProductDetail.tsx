@@ -796,6 +796,20 @@ export function ProductDetail() {
                   )}
                 </Button>
 
+                <Button 
+                  variant="outline"
+                  className="w-full h-12 font-black tracking-widest text-[10px] rounded-xl border-mare-navy/10 gap-2 hover:bg-gray-50"
+                  onClick={() => {
+                    const priceText = formatPrice(pricing ? pricing.finalPrice : product.precioMN);
+                    const url = window.location.href;
+                    const msg = `Hola MARÉ, me interesa este producto:\n\n*${product.nombre}*\n*Precio:* ${priceText}\n\nEnlace: ${url}\n\n¿Me podrían dar más información?`;
+                    openWhatsApp(msg);
+                  }}
+                >
+                  <MessageCircle strokeWidth={2} className="w-4 h-4 text-mare-green" />
+                  PREGUNTAR POR ESTE PRODUCTO
+                </Button>
+
                 {addedRecently && (
                   <div className="grid grid-cols-1 gap-2 animate-in slide-in-from-top-2 duration-300">
                     <Button 

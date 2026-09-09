@@ -10,10 +10,23 @@ import { createClient } from "@supabase/supabase-js";
 dotenv.config();
 
 // Configuración de Supabase
-const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || ''; // Usamos la anon key (Asegúrate de que RLS permita updates a los productos desde el servidor, o configura SUPABASE_SERVICE_ROLE_KEY en Render)
-const supabaseRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseKey; 
-const supabase = createClient(supabaseUrl, supabaseRoleKey);
+let supabaseClient: any = null;
+
+function getSupabase() {
+  if (!supabaseClient) {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn("Supabase credentials missing. Supabase functionality will be disabled.");
+      return null;
+    }
+    
+    const supabaseRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseKey;
+    supabaseClient = createClient(supabaseUrl, supabaseRoleKey);
+  }
+  return supabaseClient;
+}
 
 let aiClient: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI {
@@ -43,6 +56,11 @@ cron.schedule('0 3 * * *', async () => {
     }
     
     // Obtener productos activos
+    const supabase = getSupabase();
+    if (!supabase) {
+      console.log("CRON Omitido: Supabase no configurado.");
+      return;
+    }
     const { data: products, error } = await supabase
       .from('products')
       .select('id, name, description, stock_quantity, views_count, price_cup')
@@ -83,6 +101,9 @@ cron.schedule('0 3 * * *', async () => {
     const selectedIds: string[] = JSON.parse(response.text || "[]");
     
     if (selectedIds.length > 0) {
+      const supabase = getSupabase();
+      if (!supabase) return;
+
       // 1. Quitar destacado a todos
       await supabase.from('products').update({ destacado: false }).neq('id', '00000000-0000-0000-0000-000000000000');
       // 2. Poner destacado a los seleccionados
