@@ -27,16 +27,27 @@ export function Footer() {
             <p className="text-mare-turquoise font-medium">{config.eslogan}</p>
             
             {config.delivery?.pickupLocations?.[0]?.address && (
-              <div className="mt-6 text-left bg-white/5 rounded-xl p-4 border border-white/10 max-w-sm">
-                <h4 className="text-[10px] font-black text-mare-turquoise uppercase tracking-widest mb-2">Visítanos en nuestra tienda</h4>
-                <p className="text-sm font-bold text-white leading-tight mb-1">
-                  {config.delivery.pickupLocations[0].name}
-                </p>
-                <p className="text-xs text-gray-300 mb-2">
-                  {config.delivery.pickupLocations[0].address}
-                </p>
-                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  {config.delivery.pickupLocations[0].schedule}
+              <div className="mt-8 text-left bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-6 border border-white/10 max-w-sm backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute right-0 top-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3"></div>
+                <div className="relative z-10 flex gap-4 items-start">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-mare-turquoise"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  </div>
+                  <div>
+                    <h4 className="text-[9px] font-black text-mare-turquoise uppercase tracking-[0.2em] mb-1.5">Tienda Física</h4>
+                    <p className="text-sm font-black text-white tracking-wide mb-1.5">
+                      {config.delivery.pickupLocations[0].name}
+                    </p>
+                    <p className="text-xs text-gray-300 mb-3 leading-relaxed">
+                      {config.delivery.pickupLocations[0].address}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-1 rounded-full bg-mare-turquoise"></div>
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        {config.delivery.pickupLocations[0].schedule}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
