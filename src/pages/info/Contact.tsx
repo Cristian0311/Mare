@@ -62,15 +62,23 @@ export function Contact() {
         </div>
       </div>
 
-      <div className="p-8 rounded-3xl bg-mare-navy text-white text-center">
-        <h3 className="text-sm font-black uppercase tracking-widest mb-6">Síguenos en Redes Sociales</h3>
-        <div className="flex justify-center gap-6">
-          <button className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center hover:bg-mare-green transition-colors">
-            <Share2 className="h-5 w-5" />
-          </button>
-          {/* Aquí se pueden añadir más iconos de redes sociales cuando se tengan */}
+      <a 
+        href="https://whatsapp.com/channel/0029VbDQEzM6hENkcQneXg35" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="block p-8 rounded-3xl bg-gradient-to-br from-green-500 to-emerald-600 text-white text-center hover:shadow-lg transition-all hover:-translate-y-1"
+      >
+        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+          <Share2 className="h-8 w-8 text-white" />
         </div>
-      </div>
+        <h3 className="text-xl font-black tracking-tight mb-2">Canal Oficial de MARÉ</h3>
+        <p className="text-sm text-green-50 font-medium mb-6 max-w-md mx-auto">
+          Únete a nuestro canal de WhatsApp para enterarte primero de las mejores ofertas, nuevos productos y noticias exclusivas.
+        </p>
+        <div className="inline-flex items-center gap-2 bg-white text-green-600 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-green-50 transition-colors shadow-sm">
+          Seguir Canal
+        </div>
+      </a>
     </div>
   );
 }

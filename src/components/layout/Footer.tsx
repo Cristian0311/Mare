@@ -75,8 +75,16 @@ export function Footer() {
             </div>
             <div className="flex flex-col gap-3 text-center sm:text-left">
               <h4 className="font-bold text-lg mb-2 text-white">Contacto</h4>
-              <button onClick={() => openWhatsApp()} className="text-gray-300 hover:text-white transition-colors">WhatsApp</button>
-              <Link to="/informacion/contacto" className="text-gray-300 hover:text-white transition-colors">Atención al cliente</Link>
+              <button onClick={() => openWhatsApp()} className="text-gray-300 hover:text-white transition-colors">Atención por WhatsApp</button>
+              <a 
+                href="https://whatsapp.com/channel/0029VbDQEzM6hENkcQneXg35" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-mare-turquoise hover:text-white transition-colors font-bold"
+              >
+                Canal Oficial de WhatsApp
+              </a>
+              <Link to="/informacion/contacto" className="text-gray-300 hover:text-white transition-colors">Centro de Atención</Link>
             </div>
           </div>
         </div>

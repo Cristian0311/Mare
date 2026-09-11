@@ -364,25 +364,59 @@ export function Home() {
         </section>
       )}
 
-      {/* 9. CTA Final */}
-      <section className="bg-mare-green text-white rounded-3xl p-5 md:p-8 text-center shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-mare-turquoise opacity-20 blur-[80px] rounded-full pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-mare-navy opacity-10 blur-[80px] rounded-full pointer-events-none"></div>
+      {/* 9. CTA Canal de WhatsApp */}
+      <section className="px-4">
+        <a 
+          href="https://whatsapp.com/channel/0029VbDQEzM6hENkcQneXg35"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 group"
+        >
+          <div className="absolute right-0 top-0 w-64 h-64 bg-white opacity-10 blur-3xl rounded-full pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-5 text-left">
+              <div className="w-14 h-14 bg-white text-green-600 rounded-2xl flex items-center justify-center shrink-0 shadow-md">
+                <MessageCircle className="w-7 h-7 fill-current" />
+              </div>
+              <div>
+                <h3 className="text-white font-black text-xl md:text-2xl tracking-tight mb-1">
+                  Sigue el canal de MARÉ GUINERA
+                </h3>
+                <p className="text-green-50 text-sm font-medium">
+                  Entérate de las novedades y ofertas antes que nadie.
+                </p>
+              </div>
+            </div>
+            
+            <div className="shrink-0 w-full md:w-auto">
+              <div className="flex items-center justify-center w-full md:w-auto bg-white text-green-600 px-8 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest group-hover:bg-green-50 transition-colors shadow-sm">
+                Unirme al Canal
+              </div>
+            </div>
+          </div>
+        </a>
+      </section>
+
+      {/* 10. CTA Final */}
+      <section className="bg-mare-navy text-white rounded-3xl p-5 md:p-8 text-center shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-mare-turquoise opacity-10 blur-[80px] rounded-full pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-mare-gold opacity-5 blur-[80px] rounded-full pointer-events-none"></div>
         
         <div className="relative z-10 flex flex-col items-center">
-          <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/10 mb-4">
-            <ShoppingBag className="w-6 h-6 text-white" />
+          <div className="bg-white/5 p-3 rounded-xl backdrop-blur-sm border border-white/10 mb-4">
+            <ShoppingBag className="w-6 h-6 text-mare-turquoise" />
           </div>
           <h2 className="text-xl md:text-2xl font-black tracking-tight mb-2">
             Compra fácil por WhatsApp
           </h2>
-          <p className="text-xs md:text-sm text-white/80 font-medium max-w-sm mx-auto mb-6 leading-relaxed">
+          <p className="text-xs md:text-sm text-gray-400 font-medium max-w-sm mx-auto mb-6 leading-relaxed">
             Selecciona tus productos y envía tu pedido directamente. Nosotros nos encargamos del resto.
           </p>
           <Button 
             variant="outline" 
             onClick={() => navigate('/informacion/como-comprar')}
-            className="font-black text-[9px] md:text-[10px] tracking-[0.2em] px-6 h-10 md:h-11 rounded-xl border-white/20 text-white hover:bg-white hover:text-mare-green transition-all"
+            className="font-black text-[9px] md:text-[10px] tracking-[0.2em] px-6 h-10 md:h-11 rounded-xl border-white/10 text-white hover:bg-white hover:text-mare-navy transition-all"
           >
             VER GUÍA DE COMPRA
           </Button>

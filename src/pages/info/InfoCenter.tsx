@@ -107,18 +107,23 @@ export function InfoCenter() {
         ))}
       </div>
 
-      <div className="mt-12 p-6 rounded-3xl bg-mare-navy text-white text-center">
-        <h3 className="font-black tracking-tight mb-2">¿Aún tienes dudas?</h3>
-        <p className="text-sm text-gray-300 mb-6">
-          Estamos aquí para ayudarte. Contáctanos directamente por WhatsApp.
+      <a 
+        href="https://whatsapp.com/channel/0029VbDQEzM6hENkcQneXg35"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-12 block p-8 rounded-3xl bg-gradient-to-br from-green-500 to-emerald-600 text-white text-center hover:shadow-lg transition-all hover:-translate-y-1"
+      >
+        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+          <MessageCircle className="h-8 w-8 text-white fill-current" />
+        </div>
+        <h3 className="text-xl font-black tracking-tight mb-2">Canal Oficial en WhatsApp</h3>
+        <p className="text-sm text-green-50 font-medium mb-6 max-w-md mx-auto">
+          Sigue el canal de MARÉ GUINERA en WhatsApp para enterarte primero de las mejores ofertas, nuevos productos y noticias exclusivas.
         </p>
-        <Link 
-          to="/informacion/contacto"
-          className="inline-flex items-center justify-center px-8 py-3 rounded-xl bg-mare-green text-white font-black text-[10px] tracking-widest uppercase shadow-lg hover:bg-mare-turquoise transition-colors"
-        >
-          Contactar ahora
-        </Link>
-      </div>
+        <div className="inline-flex items-center gap-2 bg-white text-green-600 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-green-50 transition-colors shadow-sm">
+          Unirme al Canal
+        </div>
+      </a>
     </div>
   );
 }
