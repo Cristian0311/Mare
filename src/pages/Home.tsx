@@ -344,6 +344,36 @@ export function Home() {
             </div>
           </div>
         )}
+
+        {/* CTA Canal de WhatsApp (Compacto) */}
+        <a 
+          href="https://whatsapp.com/channel/0029VbDQEzM6hENkcQneXg35"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full max-w-2xl mt-3 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-mare-turquoise/20 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-mare-turquoise/50 transition-all group relative overflow-hidden"
+        >
+          <div className="absolute right-0 top-0 w-32 h-32 bg-mare-turquoise/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-mare-turquoise/10 transition-colors"></div>
+          
+          <div className="relative z-10 flex items-center gap-4 w-full sm:w-auto text-left">
+            <div className="w-10 h-10 bg-mare-navy text-mare-turquoise rounded-xl flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+              <MessageCircle className="w-5 h-5 fill-current" />
+            </div>
+            <div>
+              <h3 className="text-mare-navy font-black text-sm tracking-tight mb-0.5 group-hover:text-mare-turquoise transition-colors">
+                Canal Oficial de WhatsApp
+              </h3>
+              <p className="text-gray-500 text-xs font-medium">
+                Entérate primero de las nuevas ofertas
+              </p>
+            </div>
+          </div>
+          
+          <div className="relative z-10 shrink-0 w-full sm:w-auto mt-1 sm:mt-0">
+            <div className="flex items-center justify-center w-full sm:w-auto bg-mare-navy text-white px-5 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-widest group-hover:bg-mare-turquoise transition-colors shadow-sm">
+              Unirme
+            </div>
+          </div>
+        </a>
       </section>
 
       {/* 8. Recomendados */}
@@ -363,40 +393,6 @@ export function Home() {
           <ProductCarousel products={recomendados} />
         </section>
       )}
-
-      {/* 9. CTA Canal de WhatsApp */}
-      <section className="px-4">
-        <a 
-          href="https://whatsapp.com/channel/0029VbDQEzM6hENkcQneXg35"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block w-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 group"
-        >
-          <div className="absolute right-0 top-0 w-64 h-64 bg-white opacity-10 blur-3xl rounded-full pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
-          
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-5 text-left">
-              <div className="w-14 h-14 bg-white text-green-600 rounded-2xl flex items-center justify-center shrink-0 shadow-md">
-                <MessageCircle className="w-7 h-7 fill-current" />
-              </div>
-              <div>
-                <h3 className="text-white font-black text-xl md:text-2xl tracking-tight mb-1">
-                  Sigue el canal de MARÉ GUINERA
-                </h3>
-                <p className="text-green-50 text-sm font-medium">
-                  Entérate de las novedades y ofertas antes que nadie.
-                </p>
-              </div>
-            </div>
-            
-            <div className="shrink-0 w-full md:w-auto">
-              <div className="flex items-center justify-center w-full md:w-auto bg-white text-green-600 px-8 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest group-hover:bg-green-50 transition-colors shadow-sm">
-                Unirme al Canal
-              </div>
-            </div>
-          </div>
-        </a>
-      </section>
 
       {/* 10. CTA Final */}
       <section className="bg-mare-navy text-white rounded-3xl p-5 md:p-8 text-center shadow-xl relative overflow-hidden">

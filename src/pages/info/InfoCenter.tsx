@@ -111,17 +111,28 @@ export function InfoCenter() {
         href="https://whatsapp.com/channel/0029VbDQEzM6hENkcQneXg35"
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-12 block p-8 rounded-3xl bg-gradient-to-br from-green-500 to-emerald-600 text-white text-center hover:shadow-lg transition-all hover:-translate-y-1"
+        className="w-full mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-mare-turquoise/20 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-mare-turquoise/50 transition-all group relative overflow-hidden"
       >
-        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-          <MessageCircle className="h-8 w-8 text-white fill-current" />
+        <div className="absolute right-0 top-0 w-32 h-32 bg-mare-turquoise/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-mare-turquoise/10 transition-colors"></div>
+        
+        <div className="relative z-10 flex items-center gap-4 w-full sm:w-auto text-left">
+          <div className="w-12 h-12 bg-mare-navy text-mare-turquoise rounded-xl flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+            <MessageCircle className="w-6 h-6 fill-current" />
+          </div>
+          <div>
+            <h3 className="text-mare-navy font-black text-sm tracking-tight mb-0.5 group-hover:text-mare-turquoise transition-colors">
+              Canal Oficial de MARÉ
+            </h3>
+            <p className="text-gray-500 text-xs font-medium">
+              Ofertas exclusivas y nuevos productos
+            </p>
+          </div>
         </div>
-        <h3 className="text-xl font-black tracking-tight mb-2">Canal Oficial en WhatsApp</h3>
-        <p className="text-sm text-green-50 font-medium mb-6 max-w-md mx-auto">
-          Sigue el canal de MARÉ GUINERA en WhatsApp para enterarte primero de las mejores ofertas, nuevos productos y noticias exclusivas.
-        </p>
-        <div className="inline-flex items-center gap-2 bg-white text-green-600 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-green-50 transition-colors shadow-sm">
-          Unirme al Canal
+        
+        <div className="relative z-10 shrink-0 w-full sm:w-auto mt-1 sm:mt-0">
+          <div className="flex items-center justify-center w-full sm:w-auto bg-mare-navy text-white px-5 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-widest group-hover:bg-mare-turquoise transition-colors shadow-sm">
+            Unirme al Canal
+          </div>
         </div>
       </a>
     </div>
