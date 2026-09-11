@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ShoppingBag, 
@@ -10,6 +11,7 @@ import {
   Info
 } from 'lucide-react';
 import { SEO } from '../../components/ui/SEO';
+import { configService } from '../../services/config';
 
 const infoCards = [
   {
@@ -63,6 +65,16 @@ const infoCards = [
 ];
 
 export function InfoCenter() {
+  const [config, setConfig] = useState(configService.getConfigSync());
+
+  useEffect(() => {
+    const handleConfigUpdate = () => {
+      setConfig(configService.getConfigSync());
+    };
+    window.addEventListener('mare_config_updated', handleConfigUpdate);
+    return () => window.removeEventListener('mare_config_updated', handleConfigUpdate);
+  }, []);
+
   return (
     <div className="animate-in fade-in duration-500 pb-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <SEO 
@@ -83,7 +95,9 @@ export function InfoCenter() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {infoCards.map((card) => (
+        {infoCards
+          .filter(card => !(config.features?.catalogMode && card.id === 'entregas'))
+          .map((card) => (
           <Link 
             key={card.id}
             to={card.path}

@@ -5,11 +5,19 @@ import { useNavigate } from 'react-router-dom';
 import { Logo } from './Logo';
 import { bannerService, Banner } from '../../services/banners';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { configService } from '../../services/config';
 
 export function Hero() {
   const navigate = useNavigate();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [config, setConfig] = useState(configService.getConfigSync());
+
+  useEffect(() => {
+    const handleConfigUpdate = () => setConfig(configService.getConfigSync());
+    window.addEventListener('mare_config_updated', handleConfigUpdate);
+    return () => window.removeEventListener('mare_config_updated', handleConfigUpdate);
+  }, []);
 
   useEffect(() => {
     bannerService.getActiveBanners().then(data => {
@@ -55,7 +63,7 @@ export function Hero() {
               Descubre lo mejor <span className="text-mare-turquoise">en <br className="hidden md:block" /> un solo lugar.</span>
             </motion.h1>
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-[9px] md:text-[11px] font-bold text-white/40 uppercase tracking-widest leading-relaxed mb-6 max-w-sm">
-              Tu tienda de confianza en Cuba. Productos exclusivos con entregas rápidas y seguras.
+              Tu tienda de confianza en Cuba. Productos exclusivos{(config?.features?.catalogMode || !config?.delivery?.enabled) ? '.' : ' con entregas rápidas y seguras.'}
             </motion.p>
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="flex gap-2 w-full sm:w-auto">
               <Button onClick={() => navigate('/categorias')} className="flex-1 sm:flex-none rounded-xl h-10 md:h-12 px-6 font-black text-[9px] tracking-widest bg-mare-turquoise text-mare-navy hover:scale-105 transition-all shadow-xl shadow-mare-turquoise/10 border-none">

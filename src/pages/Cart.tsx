@@ -32,24 +32,6 @@ export function Cart() {
     return () => window.removeEventListener('mare_config_updated', handleConfigUpdate);
   }, []);
 
-  if (config?.features?.catalogMode) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-        <SEO title="Catálogo" description="Explora nuestro catálogo de productos en tienda física." />
-        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-          <ShoppingBag strokeWidth={1.5} className="h-10 w-10 text-gray-400" />
-        </div>
-        <h2 className="text-xl font-black text-mare-navy tracking-tight mb-2">Modo Catálogo Activo</h2>
-        <p className="text-sm font-medium text-gray-500 max-w-md mx-auto mb-8 leading-relaxed">
-          Las compras en línea están desactivadas actualmente. Por favor, visita nuestra tienda física para adquirir nuestros productos.
-        </p>
-        <Button onClick={() => navigate('/')} variant="primary" className="px-8 font-black uppercase tracking-widest text-[10px]">
-          Ver Catálogo
-        </Button>
-      </div>
-    );
-  }
-
   // Delivery estimation
   const { data: checkoutData } = useCheckoutForm();
   
@@ -276,31 +258,35 @@ export function Cart() {
                 </div>
 
                 
-                <div className="w-full border-b border-dashed border-gray-200 my-2"></div>
-                
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-gray-500">Entrega</span>
-                  {deliveryCost > 0 ? (
-                    <span className="font-black text-mare-navy">{formatPrice(deliveryCost)}</span>
-                  ) : (
-                    <span className="text-[9px] font-black text-mare-green tracking-widest uppercase italic">
-                      Pendiente
-                    </span>
-                  )}
-                </div>
-                {checkoutData.provincia && (
-                  <div className="flex justify-between items-center">
-                     <span className="text-[10px] font-medium text-gray-400 truncate max-w-[200px]">
-                        {checkoutData.metodoEntrega === 'domicilio' ? 'A domicilio: ' : 'Recogida: '}
-                        {checkoutData.municipio}
-                     </span>
-                     <button
-                        onClick={() => navigate('/pedido')}
-                       className="text-[9px] font-black text-mare-green hover:underline uppercase tracking-wider ml-2"
-                     >
-                        Editar
-                     </button>
-                  </div>
+                {!(config?.features?.catalogMode || !config?.delivery?.enabled) && (
+                  <>
+                    <div className="w-full border-b border-dashed border-gray-200 my-2"></div>
+                    
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-gray-500">Entrega</span>
+                      {deliveryCost > 0 ? (
+                        <span className="font-black text-mare-navy">{formatPrice(deliveryCost)}</span>
+                      ) : (
+                        <span className="text-[9px] font-black text-mare-green tracking-widest uppercase italic">
+                          Pendiente
+                        </span>
+                      )}
+                    </div>
+                    {checkoutData.provincia && (
+                      <div className="flex justify-between items-center">
+                         <span className="text-[10px] font-medium text-gray-400 truncate max-w-[200px]">
+                            {checkoutData.metodoEntrega === 'domicilio' ? 'A domicilio: ' : 'Recogida: '}
+                            {checkoutData.municipio}
+                         </span>
+                         <button
+                            onClick={() => navigate('/pedido')}
+                           className="text-[9px] font-black text-mare-green hover:underline uppercase tracking-wider ml-2"
+                         >
+                            Editar
+                         </button>
+                      </div>
+                    )}
+                  </>
                 )}
                 
                 <div className="w-full border-b-2 border-mare-navy mt-4 mb-2"></div>

@@ -11,6 +11,7 @@ interface OrderSummaryProps {
   onReview: () => void;
   isSubmitting?: boolean;
   step?: number;
+  isDeliveryDisabled?: boolean;
 }
 
 export function OrderSummary({ 
@@ -20,7 +21,8 @@ export function OrderSummary({
   isValid, 
   onReview, 
   isSubmitting, 
-  step = 1 
+  step = 1,
+  isDeliveryDisabled = false
 }: OrderSummaryProps) {
   const { formatPrice } = useCurrency();
 
@@ -46,12 +48,14 @@ export function OrderSummary({
           </div>
         )}
 
-        <div className="flex justify-between items-center text-xs">
-          <span className="font-bold text-white/60">Entrega</span>
-          <span className="font-black text-mare-green uppercase italic tracking-widest">
-            {deliveryCost > 0 ? `+ ${formatPrice(deliveryCost)}` : 'Pendiente'}
-          </span>
-        </div>
+        {!isDeliveryDisabled && (
+          <div className="flex justify-between items-center text-xs">
+            <span className="font-bold text-white/60">Entrega</span>
+            <span className="font-black text-mare-green uppercase italic tracking-widest">
+              {deliveryCost > 0 ? `+ ${formatPrice(deliveryCost)}` : 'Pendiente'}
+            </span>
+          </div>
+        )}
 
         <div className="pt-4 border-t border-white/10 mt-4">
           <div className="flex justify-between items-end">

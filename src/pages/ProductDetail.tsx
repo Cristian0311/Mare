@@ -860,17 +860,19 @@ export function ProductDetail() {
           </h2>
           <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-6">
             <div className="space-y-5">
-              <div className="flex items-start gap-4">
-                <div className="w-9 h-9 rounded-xl bg-mare-green/10 flex items-center justify-center shrink-0">
-                  <Truck className="w-4.5 h-4.5 text-mare-green" />
+              {!(config?.features?.catalogMode || !config?.delivery?.enabled) && (
+                <div className="flex items-start gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-mare-green/10 flex items-center justify-center shrink-0">
+                    <Truck className="w-4.5 h-4.5 text-mare-green" />
+                  </div>
+                  <div>
+                    <h4 className="text-[11px] font-black text-mare-navy uppercase tracking-widest mb-1">Envío a Domicilio</h4>
+                    <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
+                      Entregas rápidas en <span className="font-bold text-mare-navy">La Habana</span> entre 24h y 72h hábiles.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-[11px] font-black text-mare-navy uppercase tracking-widest mb-1">Envío a Domicilio</h4>
-                  <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
-                    Entregas rápidas en <span className="font-bold text-mare-navy">La Habana</span> entre 24h y 72h hábiles.
-                  </p>
-                </div>
-              </div>
+              )}
 
               <div className="flex items-start gap-4">
                 <div className="w-9 h-9 rounded-xl bg-mare-gold/10 flex items-center justify-center shrink-0">

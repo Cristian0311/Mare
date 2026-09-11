@@ -45,10 +45,10 @@ export function Checkout() {
   }, []);
 
   useEffect(() => {
-    if (totalItems === 0 || config?.features?.catalogMode) {
+    if (totalItems === 0) {
       navigate('/mi-pedido', { replace: true });
     }
-  }, [totalItems, navigate, config]);
+  }, [totalItems, navigate]);
 
   const { currency: currentCurrency, formatPrice, convertPrice } = useCurrency();
   const { getBestPrice, activePromotions } = usePromotions();
@@ -64,7 +64,44 @@ export function Checkout() {
   }, 0);
 
 
-  const { data, updateField, errors, validate, isValid, isRecovered } = useCheckoutForm();
+  const { data, updateField, errors, validate: originalValidate, isValid: originalIsValid, isRecovered } = useCheckoutForm();
+  
+  // Force method to recogida if catalogMode or delivery disabled
+  const isDeliveryDisabled = config?.features?.catalogMode || !config?.delivery?.enabled;
+  const effectiveMetodoEntrega = isDeliveryDisabled ? 'recogida' : data.metodoEntrega;
+  const effectiveData = { ...data, metodoEntrega: effectiveMetodoEntrega as 'domicilio' | 'recogida' };
+  
+  const validate = () => {
+    if (isDeliveryDisabled) {
+       // if it's recogida, we just need a name and phone
+       const newErrors: any = {};
+       if (!effectiveData.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio';
+       if (!effectiveData.telefono.trim()) newErrors.telefono = 'El teléfono es obligatorio';
+       if (!effectiveData.puntoRecogida) newErrors.puntoRecogida = 'Selecciona un punto';
+       
+       if (Object.keys(newErrors).length > 0) {
+         // just setting local state for errors isn't easy here, let's let the original validate do it
+         // but override metodoEntrega
+       }
+    }
+    // hack: temporarily set data.metodoEntrega for the hook to validate correctly
+    if (isDeliveryDisabled && data.metodoEntrega !== 'recogida') {
+       updateField('metodoEntrega', 'recogida');
+       // It's going to validate on next render, but let's just return what we expect.
+    }
+    
+    return originalValidate();
+  };
+
+  useEffect(() => {
+    if (isDeliveryDisabled && data.metodoEntrega !== 'recogida') {
+      updateField('metodoEntrega', 'recogida');
+    }
+  }, [isDeliveryDisabled, data.metodoEntrega, updateField]);
+
+  const isValid = isDeliveryDisabled 
+    ? (effectiveData.nombre.trim() !== '' && effectiveData.telefono.trim() !== '' && effectiveData.puntoRecogida !== '')
+    : originalIsValid;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
   const [advisorSelectorOpen, setAdvisorSelectorOpen] = useState(false);
@@ -335,13 +372,18 @@ export function Checkout() {
                 errors={errors} 
               />
 
-              <DeliveryOptions 
-                metodo={data.metodoEntrega} 
-                onChange={(val) => updateField('metodoEntrega', val)} 
-              />
+              {!(config?.features?.catalogMode || !config?.delivery?.enabled) && (
+                <DeliveryOptions 
+                  metodo={data.metodoEntrega} 
+                  onChange={(val) => updateField('metodoEntrega', val)} 
+                />
+              )}
 
               <AddressSelector 
-                data={data} 
+                data={{
+                  ...data,
+                  metodoEntrega: (config?.features?.catalogMode || !config?.delivery?.enabled) ? 'recogida' : data.metodoEntrega
+                }} 
                 updateField={updateField} 
                 errors={errors} 
               />
@@ -433,6 +475,7 @@ export function Checkout() {
             onReview={step === 1 ? handleReview : handleFinalConfirm}
             isSubmitting={isSubmitting}
             step={step}
+            isDeliveryDisabled={isDeliveryDisabled}
           />
         </div>
       </div>

@@ -65,9 +65,9 @@ export function Footer() {
             <div className="flex flex-col gap-3">
               <h4 className="font-bold text-lg mb-2 text-white">Información</h4>
               <Link to="/informacion/como-comprar" className="text-gray-300 hover:text-white transition-colors">Cómo comprar</Link>
-              {config.delivery.enabled && (
+              {!(config.features?.catalogMode || !config.delivery?.enabled) && (
                 <Link to="/informacion/entregas" className="text-gray-300 hover:text-white transition-colors">
-                  {config.features?.catalogMode ? 'Ubicación' : 'Entregas'}
+                  Entregas
                 </Link>
               )}
               <Link to="/informacion/faq" className="text-gray-300 hover:text-white transition-colors">Preguntas frecuentes</Link>
