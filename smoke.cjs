@@ -35,10 +35,21 @@ const base = "https://mare-a8w2.onrender.com";
       await new Promise(r=>setTimeout(r,500));
     }
 
-    await desktop.goto(base+productPath+"?smoke="+Date.now(),{waitUntil:"domcontentloaded",timeout:30000});
-    await new Promise(r=>setTimeout(r,8000));
-    const detailBody=await desktop.evaluate(()=>document.body?.innerText||"");
-    checks.push({route:productPath,viewport:"desktop-detail",status:200,title:await desktop.title(),cards:0,fatal:/Algo salió mal en este módulo|Error al iniciar MARÉ|Error al iniciar este módulo/i.test(detailBody),errors:[],consoleErrors:[]});
+    const detailPage=await browser.newPage();
+    await detailPage.setViewport({width:1440,height:1000});
+    const detailErrors=[];
+    const detailConsoleErrors=[];
+    detailPage.on("pageerror",e=>detailErrors.push(String(e)));
+    detailPage.on("console",m=>{if(m.type()==="error") detailConsoleErrors.push(m.text());});
+    await detailPage.goto(base+productPath+"?smoke=deeplink-"+Date.now(),{waitUntil:"domcontentloaded",timeout:30000});
+    await detailPage.evaluate(()=>{localStorage.clear(); sessionStorage.clear();});
+    await detailPage.reload({waitUntil:"domcontentloaded",timeout:30000});
+    await new Promise(r=>setTimeout(r,12000));
+    const detailBody=await detailPage.evaluate(()=>document.body?.innerText||"");
+    const detailH1=(await detailPage.$("h1"))!==null;
+    const detailHasName=detailBody.toLowerCase().includes("ventiladores") || detailBody.toLowerCase().includes("f6");
+    checks.push({route:productPath,viewport:"desktop-detail-deeplink",status:200,title:await detailPage.title(),hasH1:detailH1,hasProductName:detailHasName,fatal:/Algo salió mal en este módulo|Error al iniciar MARÉ|Error al iniciar este módulo|Producto no encontrado/i.test(detailBody),errors:detailErrors,consoleErrors:detailConsoleErrors});
+    await detailPage.close();
     await desktop.close();
 
     const mobile=await visit("/",{width:390,height:844});
