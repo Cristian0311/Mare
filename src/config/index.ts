@@ -41,9 +41,7 @@ export const appConfig = {
     defaultMessage: 'Hola MARÉ, me interesa este producto:',
     orderMessage: 'Hola MARÉ, quiero confirmar mi pedido:',
     templates: {
-      retail: 'Hola, mi pedido en MARÉ es:\n\n{productos}\n\n*Total:* {total}\n*Entrega:* {provincia}, {municipio}\n*Asesor:* {asesor}',
-      wholesale: 'Hola MARÉ, quiero hacer un pedido mayorista:\n\n{productos}\n\n*Total:* {total}',
-      reservation: 'Hola MARÉ, quiero reservar:\n\n{productos}\n\n*Adelanto (30%):* {adelanto}\n*Restante (70%):* {restante}'
+      retail: 'Hola, mi pedido en MARÉ es:\n\n{productos}\n\n*Total:* {total}\n*Entrega:* {provincia}, {municipio}\n*Asesor:* {asesor}'
     }
   },
   advisors: [
