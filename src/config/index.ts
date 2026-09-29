@@ -40,8 +40,6 @@ export const appConfig = {
     generalNumber: storeConfig.whatsappNumber,
     defaultMessage: 'Hola MARÉ, me interesa este producto:',
     orderMessage: 'Hola MARÉ, quiero confirmar mi pedido:',
-    reservationMessage: 'Hola MARÉ, quiero hacer una reserva:',
-    wholesaleMessage: 'Hola MARÉ, quiero hacer un pedido mayorista:',
     templates: {
       retail: 'Hola, mi pedido en MARÉ es:\n\n{productos}\n\n*Total:* {total}\n*Entrega:* {provincia}, {municipio}\n*Asesor:* {asesor}',
       wholesale: 'Hola MARÉ, quiero hacer un pedido mayorista:\n\n{productos}\n\n*Total:* {total}',
@@ -84,14 +82,6 @@ export const appConfig = {
       { id: '2', name: 'Almacén 1 - Plaza de la Revolución', address: 'Ave. Paseo #102, Plaza de la Revolución, La Habana', schedule: 'Lunes a Sábado (10:00 AM - 6:00 PM)', active: true },
       { id: '3', name: 'Punto de Recogida - Playa', address: 'Calle 5ta Ave #3002, Playa, La Habana', schedule: 'Lunes a Viernes (11:00 AM - 4:00 PM)', active: true }
     ]
-  },
-  wholesale: {
-    enabled: true,
-    minOrderAmountMN: 0
-  },
-  reservation: {
-    enabled: true,
-    defaultAdvancePercentage: 30
   },
   seo: {
     defaultTitle: 'MARÉ - Todo lo que buscas',
