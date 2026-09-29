@@ -6,12 +6,26 @@ import { CaretRight, Package } from 'phosphor-react';
 import { getCategoryIcon } from '../../utils/categoryIcons';
 
 export function CategoryCarousel() {
-  const [categories, setCategories] = useState(categoryService.getCategoriesSync());
+  const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
-    const handleUpdate = () => setCategories(categoryService.getCategoriesSync());
+    let mounted = true;
+    const load = async () => {
+      try {
+        const data = await categoryService.getCategories();
+        if (mounted) setCategories(data);
+      } catch (error) {
+        console.warn('Categories unavailable; showing empty category list.', error);
+        if (mounted) setCategories([]);
+      }
+    };
+    load();
+    const handleUpdate = () => load();
     window.addEventListener('mare_categories_updated', handleUpdate);
-    return () => window.removeEventListener('mare_categories_updated', handleUpdate);
+    return () => {
+      mounted = false;
+      window.removeEventListener('mare_categories_updated', handleUpdate);
+    };
   }, []);
 
   return (
