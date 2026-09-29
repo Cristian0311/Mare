@@ -1,137 +1,92 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { RefreshCcw, Home, AlertTriangle, Sparkles } from 'lucide-react';
 
-interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
-}
+interface Props { children: ReactNode; fallback?: ReactNode; }
+interface State { hasError: boolean; error: Error | null; isChunkError: boolean; }
 
-interface State {
-  hasError: boolean;
-  error: Error | null;
-  isChunkError: boolean;
-}
+const isChunkFailure = (error: any) => {
+  const message = error?.message || String(error || '');
+  return /Failed to fetch dynamically imported module|Importing a module script failed|Loading chunk/i.test(message);
+};
+
+const hardReset = async () => {
+  try { sessionStorage.removeItem('mare_chunk_retry_time'); } catch {}
+  try { localStorage.removeItem('mare-admin-session'); } catch {}
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(key => caches.delete(key)));
+    }
+  } catch {}
+  try {
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(registration => registration.unregister()));
+    }
+  } catch {}
+  const url = new URL('/', window.location.origin);
+  url.searchParams.set('mare_refresh', String(Date.now()));
+  window.location.replace(url.toString());
+};
 
 export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null,
-    isChunkError: false
-  };
+  state: State = { hasError: false, error: null, isChunkError: false };
 
-  public static getDerivedStateFromError(error: Error): State {
-    const errorMsg = error?.message || error?.toString() || '';
-    const isChunkError = 
-      errorMsg.includes('Failed to fetch dynamically imported module') ||
-      errorMsg.includes('Importing a module script failed') ||
-      errorMsg.includes('Loading chunk');
-
-    return { hasError: true, error, isChunkError };
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error, isChunkError: isChunkFailure(error) };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
-    
-    // Auto-reload if chunk error and not reloaded recently
-    if (this.state.isChunkError) {
-      const now = Date.now();
-      const lastReload = parseInt(sessionStorage.getItem('mare_chunk_retry_time') || '0', 10);
-      if (now - lastReload > 8000) {
-        sessionStorage.setItem('mare_chunk_retry_time', now.toString());
-        window.location.reload();
-        return;
-      }
-    }
-
-    // Log to server if API available
-    fetch('/api/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        error: error.message,
-        stack: error.stack,
-        info: errorInfo,
-        url: window.location.href
-      })
-    }).catch(() => {});
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('MARÉ runtime error:', error, errorInfo);
+    try {
+      fetch('/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: error.message, stack: error.stack, info: errorInfo, url: window.location.href })
+      }).catch(() => {});
+    } catch {}
   }
 
-  private handleReset = () => {
-    this.setState({ hasError: false, error: null, isChunkError: false });
-    
-    if (this.state.isChunkError && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (const registration of registrations) {
-          registration.unregister();
-        }
-      }).finally(() => {
-        window.location.reload();
-      });
-    } else {
-      window.location.reload();
-    }
+  private retry = () => {
+    window.location.reload();
   };
 
-  private handleGoHome = () => {
-    window.location.href = '/';
+  private reset = () => {
+    void hardReset();
   };
 
-  public render() {
-    if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback;
-      }
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    if (this.props.fallback) return this.props.fallback;
 
-      const isChunk = this.state.isChunkError;
-
-      return (
-        <div className="min-h-[400px] flex flex-col items-center justify-center p-8 bg-white rounded-[2rem] border border-gray-100 shadow-sm max-w-xl mx-auto my-8">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 ${isChunk ? 'bg-mare-turquoise/10 text-mare-turquoise' : 'bg-red-50 text-red-500'}`}>
-            {isChunk ? <Sparkles size={32} /> : <AlertTriangle size={32} />}
-          </div>
-          
-          <h2 className="text-xl font-black text-mare-navy uppercase tracking-tight mb-2 text-center">
-            {isChunk ? 'Nueva versión de MARÉ disponible' : 'Algo salió mal en este módulo'}
-          </h2>
-          
-          <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-8 text-center max-w-md leading-relaxed">
-            {isChunk 
-              ? 'Se han realizado mejoras en la tienda. Haz clic en actualizar para cargar la última versión.' 
-              : 'Se ha producido un error inesperado. Puedes reintentar la acción o volver al inicio.'}
-          </p>
-
-          <div className="flex flex-wrap justify-center gap-4">
-            <button
-              onClick={this.handleReset}
-              className="flex items-center px-6 py-3 bg-mare-navy text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-mare-navy/90 transition-all shadow-md active:scale-95"
-            >
-              <RefreshCcw size={16} className="mr-2" />
-              {isChunk ? 'Actualizar MARÉ' : 'Reintentar'}
-            </button>
-            
-            <button
-              onClick={this.handleGoHome}
-              className="flex items-center px-6 py-3 bg-white text-mare-navy border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all active:scale-95"
-            >
-              <Home size={16} className="mr-2" />
-              Ir al Inicio
-            </button>
-          </div>
-
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-10 p-4 bg-gray-50 rounded-lg w-full max-w-2xl overflow-auto border border-gray-200">
-              <p className="text-[10px] font-black text-red-600 mb-2 uppercase tracking-widest">Error técnico:</p>
-              <pre className="text-[10px] text-gray-600 font-mono">
-                {this.state.error?.toString()}
-                {"\n"}
-                {this.state.error?.stack}
-              </pre>
-            </div>
-          )}
+    const isChunk = this.state.isChunkError;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white text-center">
+        <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 ${isChunk ? 'bg-mare-turquoise/10 text-mare-turquoise' : 'bg-red-50 text-red-500'}`}>
+          {isChunk ? <Sparkles size={32} /> : <AlertTriangle size={32} />}
         </div>
-      );
-    }
-
-    return this.props.children;
+        <h2 className="text-xl font-black text-mare-navy uppercase tracking-tight mb-3">
+          {isChunk ? 'Nueva versión de MARÉ disponible' : 'Error al iniciar MARÉ'}
+        </h2>
+        <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-8 max-w-md leading-relaxed">
+          {isChunk
+            ? 'La aplicación necesita cargar una versión actualizada.'
+            : 'Puedes reintentar o abrir el inicio limpio de la aplicación.'}
+        </p>
+        <div className="flex flex-wrap justify-center gap-3">
+          <button type="button" onClick={this.retry} className="flex items-center px-6 py-3 bg-mare-navy text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md">
+            <RefreshCcw size={16} className="mr-2" />
+            {isChunk ? 'Actualizar MARÉ' : 'Reintentar'}
+          </button>
+          <a href="/?mare_reset=1790656346836" className="flex items-center px-6 py-3 bg-white text-mare-navy border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
+            <Home size={16} className="mr-2" />
+            Ir al Inicio
+          </a>
+          <button type="button" onClick={this.reset} className="px-6 py-3 bg-gray-50 text-gray-500 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest">
+            Restablecer aplicación
+          </button>
+        </div>
+      </div>
+    );
   }
 }
