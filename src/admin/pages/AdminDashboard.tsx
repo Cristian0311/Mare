@@ -32,43 +32,28 @@ export function AdminDashboard() {
   const loadDashboardData = async () => {
     setIsLoading(true);
     try {
-      const [orders, products, dashboardAnalytics, salesTrends, visits] = await Promise.all([
-        safeFetch(() => orderService.getAllOrders(), [], 4000),
-        safeFetch(() => productService.getAllProducts(), [], 4000),
-        safeFetch(() => analyticsService.getDashboardStats('30d'), { 
-          current: { totalSales: 0, ordersCount: 0, avgOrder: 0, wholesaleOrders: 0, newCustomers: 0 },
-          previous: { totalSales: 0, ordersCount: 0, avgOrder: 0, wholesaleOrders: 0, newCustomers: 0 },
-          variations: { totalSales: 0, ordersCount: 0, avgOrder: 0, newCustomers: 0, wholesaleOrders: 0 },
-          range: { from: '', to: '' }
-        }, 4000),
-        safeFetch(() => analyticsService.getSalesTrends('30d'), [], 4000),
-        safeFetch(() => metricsService.getGlobalVisits(), 0, 4000)
-      ]);
-      
-      const ventasTotales = orders
-        .filter(o => o.status === 'completed' || o.status === 'delivered')
-        .reduce((sum, order) => sum + (order.total_cup || 0), 0);
-        
-      const pedidosNuevos = orders.filter(o => o.status === 'pending' || o.status === 'processing').length;
-      
-      const activeClients = new Set(orders.map(o => o.customer?.phone)).size;
+      // Mare is a catalog layer; operational orders/customers live in the CRM.
+      // Keep this dashboard limited to catalog data so it never queries Mare-owned order tables.
+      const products = await safeFetch(() => productService.getAllProducts(), [], 4000);
+      const visits = Number(localStorage.getItem('mare_local_visits_fallback') || 0);
 
       setStats({
-        ventasTotales,
-        pedidosNuevos,
-        clientesActivos: activeClients,
-        productosStock: products.filter(p => p.activo !== false).length,
+        ventasTotales: 0,
+        pedidosNuevos: 0,
+        clientesActivos: 0,
+        productosStock: products.filter(p => p.activo !== false && (p.stock ?? 0) > 0).length,
         visitasTotales: visits,
-        crecimientoVentas: dashboardAnalytics.variations.totalSales,
-        crecimientoPedidos: dashboardAnalytics.variations.ordersCount
+        crecimientoVentas: 0,
+        crecimientoPedidos: 0
       });
 
-      setTrends(salesTrends);
-      setRecentOrders(orders.slice(0, 10)); // Mostrar un poco más en el dashboard rediseñado
+      setTrends([]);
+      setRecentOrders([]);
     } catch (err) {
-      console.error("Error loading dashboard data", err);
+      console.error('Error loading catalog dashboard', err);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const kpis = [
