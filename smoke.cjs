@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer");
 
 const base = "https://mare-a8w2.onrender.com";
-// Production product cache fix deployed; verify bootstrap and catalog cards.
+// Production hydrate fix deployed; verify main catalog and all public roots.
 const routes = [
   "/",
   "/categorias",
