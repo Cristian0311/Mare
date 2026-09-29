@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button';
 import { SEO } from '../components/ui/SEO';
 import { getOffers, getNewProducts, getBestSellers, getFeaturedProducts, getAllPublicProducts } from '../utils/products';
 import { productService } from '../services/products';
+import { categoriesService } from '../services/categories';
 
 export function Home() {
   const [productsVersion, setProductsVersion] = useState(0);
@@ -15,6 +16,7 @@ export function Home() {
   useEffect(() => {
     window.scrollTo(0, 0);
     void productService.hydrate();
+    void categoriesService.hydrate();
     const handleProductsUpdate = () => setProductsVersion(v => v + 1);
     window.addEventListener('mare_products_updated', handleProductsUpdate);
     return () => window.removeEventListener('mare_products_updated', handleProductsUpdate);
