@@ -1,83 +1,21 @@
-import { supabase } from '../lib/supabase/client';
-import { InventoryMovement, InventoryMovementType } from '../types/inventory';
+import { supabase, isConfigured } from '../lib/supabase/client';
 
-export class InventoryService {
-  async getMovements(options?: {
-    productId?: string;
-    type?: InventoryMovementType;
-    limit?: number;
-    page?: number;
-  }) {
-    let query = supabase
-      .from('inventory_movements')
-      .select(`
-        *,
-        product:products(id, nombre:name)
-      `);
+export const MARE_BRANCH_ID = '871e7074-dbea-48dc-ae1e-f1570b5e0047';
 
-    if (options?.productId) {
-      query = query.eq('product_id', options.productId);
-    }
-    if (options?.type) {
-      query = query.eq('type', options.type);
-    }
-
-    const limit = options?.limit || 20;
-    const page = options?.page || 1;
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    const { data, error, count } = await query
-      .order('created_at', { ascending: false })
-      .range(from, to);
-
+export const inventoryService = {
+  async getInventoryByProduct(productId: string) {
+    if (!isConfigured) return [];
+    const { data, error } = await supabase.from('inventory').select('*').eq('product_id', productId).eq('branch_id', MARE_BRANCH_ID);
     if (error) throw error;
-    return { data, count };
-  }
-
-  async adjustStock(params: {
-    productId: string;
-    quantity: number;
-    type: InventoryMovementType;
-    reason: string;
-    orderId?: string;
-    reservationId?: string;
-  }) {
-    const { productId, quantity, type, reason, orderId, reservationId } = params;
-
-    const { data, error } = await supabase.rpc('adjust_product_stock', {
-      p_product_id: productId,
-      p_quantity: quantity,
-      p_type: type,
-      p_reason: reason,
-      p_order_id: orderId,
-      p_reservation_id: reservationId
-    });
-
-    if (error) throw error;
-    if (data && !data.success) throw new Error(data.error);
-    
-    return data;
-  }
-
+    return data || [];
+  },
   async getInventoryStats() {
-    const { data, error } = await supabase
-      .from('products')
-      .select('available, availability_status, stock_tracking, stock_quantity, reserved_quantity');
-
+    if (!isConfigured) return { total_products: 0, available: 0, low_stock: 0, out_of_stock: 0, on_order: 0, reserved_total: 0 };
+    const { data, error } = await supabase.from('inventory').select('product_id,quantity,min_quantity').eq('branch_id', MARE_BRANCH_ID);
     if (error) throw error;
-
-    const stats = {
-      total_products: data.length,
-      available: data.filter(p => p.available === true).length,
-      low_stock: data.filter(p => p.availability_status === 'low_stock').length,
-      out_of_stock: data.filter(p => p.available === false).length,
-      on_order: data.filter(p => p.availability_status === 'on_order').length,
-      reserved_total: data.reduce((sum, p) => sum + (p.reserved_quantity || 0), 0)
-    };
-
-    return stats;
-  }
-}
-
-export const inventoryService = new InventoryService();
+    const rows = data || [];
+    return { total_products:new Set(rows.map((r:any)=>r.product_id)).size, available:rows.filter((r:any)=>Number(r.quantity)>0).length, low_stock:rows.filter((r:any)=>Number(r.quantity)>0&&Number(r.quantity)<=Number(r.min_quantity||0)).length, out_of_stock:rows.filter((r:any)=>Number(r.quantity)<=0).length, on_order:0, reserved_total:0 };
+  },
+  async adjustStock(): Promise<never> { throw new Error('Mare no modifica inventario. El inventario pertenece al CRM.'); },
+  async createMovement(): Promise<never> { throw new Error('Mare no crea movimientos. El inventario pertenece al CRM.'); }
+};
