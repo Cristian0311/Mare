@@ -53,7 +53,6 @@ const MENU_GROUPS = [
     items: [
       { path: '/mare0311/clientes', icon: Users, label: 'Clientes' },
       { path: '/mare0311/asesores', icon: Headset, label: 'Asesores' },
-      { path: '/mare0311/mayoristas', icon: CircleDollarSign, label: 'Mayoristas' },
     ]
   },
   {
