@@ -55,11 +55,6 @@ const defaultFaqs = [
         title: '¿Tienen garantía los productos?',
         content: 'Sí, todos nuestros productos cuentan con garantía contra defectos de fábrica. El tiempo de garantía varía según el tipo de producto. Consúltanos por WhatsApp para detalles específicos.'
       },
-      {
-        id: 'q8',
-        title: '¿Venden al por mayor?',
-        content: 'Sí. Muchos de nuestros productos tienen precios especiales para compras por volumen (paquetes, cajas o lotes). Puedes identificar estos productos por la etiqueta "Mayorista" o visitar la sección correspondiente.'
-      }
     ]
   }
 ];
@@ -73,16 +68,6 @@ const catalogFaqs = [
         title: '¿Cómo adquiero un producto del catálogo?',
         content: 'Actualmente funcionamos como catálogo digital para que explores nuestra colección. Visítanos en nuestra tienda física para ver, probar y comprar los productos directamente con atención personalizada.'
       },
-      {
-        id: 'q2',
-        title: '¿Puedo reservar un producto online?',
-        content: 'Las compras online directas están desactivadas en este modo. Para cualquier duda, reserva o consulta sobre disponibilidad, puedes tocar el botón "Preguntar por este producto" en la ficha del artículo y contactar a nuestros asesores vía WhatsApp.'
-      },
-      {
-        id: 'q3',
-        title: '¿Tienen la misma disponibilidad en la tienda física?',
-        content: 'Nuestro catálogo se actualiza constantemente para reflejar el inventario de nuestra tienda. Te sugerimos confirmar la disponibilidad por WhatsApp antes de visitarnos para asegurar tu artículo.'
-      }
     ]
   },
   {
