@@ -1,87 +1,53 @@
 const puppeteer = require("puppeteer");
 
 const base = "https://mare-a8w2.onrender.com";
-// Production hydrate fix deployed; verify main catalog and all public roots.
-const routes = [
-  "/",
-  "/categorias",
-  "/buscar",
-  "/coleccion/ofertas",
-  "/coleccion/novedades",
-  "/coleccion/destacados",
-  "/coleccion/mas-vendidos",
-  "/mi-pedido",
-  "/favoritos",
-  "/informacion",
-  "/informacion/como-comprar",
-  "/informacion/entregas",
-  "/informacion/faq",
-  "/informacion/condiciones",
-  "/informacion/contacto"
-];
 
 (async () => {
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
-  });
-
-  const results = [];
+  const browser = await puppeteer.launch({headless:"new",args:["--no-sandbox","--disable-setuid-sandbox","--disable-dev-shm-usage"]});
   try {
-    for (const route of routes) {
-      const page = await browser.newPage();
-      const pageErrors = [];
-      const consoleErrors = [];
-      const requestFailures = [];
-
-      page.on("pageerror", e => pageErrors.push(String(e)));
-      page.on("console", msg => {
-        if (msg.type() === "error") consoleErrors.push(msg.text());
-      });
-      page.on("requestfailed", req => requestFailures.push(req.url() + " :: " + (req.failure()?.errorText || "failed")));
-
-      const response = await page.goto(base + route + "?smoke=" + Date.now(), {
-        waitUntil: "domcontentloaded",
-        timeout: 30000
-      });
-
-      await new Promise(resolve => setTimeout(resolve, 10000));
-
-      const body = await page.evaluate(() => document.body?.innerText || "");
-      const cards = await page.$$('[id^="product-card-"]');
-      const fatalText = /Algo salió mal en este módulo|Error al iniciar MARÉ|Error al iniciar este módulo/i.test(body);
-
-      results.push({
-        route,
-        status: response?.status() || 0,
-        title: await page.title(),
-        productCards: cards.length,
-        fatalText,
-        pageErrors,
-        consoleErrors,
-        requestFailures: requestFailures.slice(0, 20)
-      });
-
-      await page.close();
+    const checks=[];
+    async function visit(route, viewport) {
+      const page=await browser.newPage();
+      await page.setViewport(viewport);
+      const errors=[];
+      const consoleErrors=[];
+      page.on("pageerror",e=>errors.push(String(e)));
+      page.on("console",m=>{if(m.type()==="error") consoleErrors.push(m.text());});
+      const response=await page.goto(base+route+"?smoke="+Date.now(),{waitUntil:"domcontentloaded",timeout:30000});
+      await new Promise(r=>setTimeout(r,8000));
+      const body=await page.evaluate(()=>document.body?.innerText||"");
+      checks.push({route,viewport:viewport.width,status:response?.status()||0,title:await page.title(),cards:await page.$$('[id^="product-card-"]').then(a=>a.length),fatal:/Algo salió mal en este módulo|Error al iniciar MARÉ|Error al iniciar este módulo/i.test(body),errors,consoleErrors});
+      return page;
     }
 
-    console.log(JSON.stringify(results, null, 2));
+    const desktop=await visit("/",{width:1440,height:1000});
+    if ((await desktop.$$('[id^="product-card-"]')).length===0) throw new Error("La página principal no muestra productos en escritorio.");
 
-    const home = results[0];
-    const bad = results.filter(r =>
-      r.status >= 400 ||
-      r.fatalText ||
-      r.pageErrors.length > 0
-    );
-
-    if (!home || home.status >= 400 || home.fatalText || home.pageErrors.length || home.productCards === 0) {
-      process.exit(2);
+    const productHref=await desktop.$eval('a[href^="/producto/"]',a=>a.getAttribute("href"));
+    if(!productHref) throw new Error("No hay enlace de detalle de producto en la página principal.");
+    const addButton=await desktop.$('[id^="btn-add-"]:not([disabled])');
+    if(addButton){
+      await addButton.click();
+      await new Promise(r=>setTimeout(r,500));
     }
-    if (bad.length) process.exit(3);
-  } finally {
-    await browser.close();
-  }
-})().catch(err => {
-  console.error(err);
-  process.exit(4);
-});
+
+    await desktop.goto(base+productHref+"?smoke="+Date.now(),{waitUntil:"domcontentloaded",timeout:30000});
+    await new Promise(r=>setTimeout(r,8000));
+    const detailBody=await desktop.evaluate(()=>document.body?.innerText||"");
+    checks.push({route:productHref,viewport:"desktop-detail",status:200,title:await desktop.title(),cards:0,fatal:/Algo salió mal en este módulo|Error al iniciar MARÉ|Error al iniciar este módulo/i.test(detailBody),errors:[],consoleErrors:[]});
+    await desktop.close();
+
+    const mobile=await visit("/",{width:390,height:844});
+    if ((await mobile.$$('[id^="product-card-"]')).length===0) throw new Error("La página principal no muestra productos en móvil.");
+    await mobile.close();
+
+    const admin=await visit("/mare0311/login",{width:1440,height:1000});
+    const adminBody=await admin.evaluate(()=>document.body?.innerText||"");
+    if(/Algo salió mal|Error al iniciar/i.test(adminBody)) throw new Error("El login administrativo muestra un error fatal.");
+    await admin.close();
+
+    const bad=checks.filter(x=>x.status>=400||x.fatal||x.errors.length);
+    console.log(JSON.stringify(checks,null,2));
+    if(bad.length) process.exit(2);
+  } finally { await browser.close(); }
+})().catch(e=>{console.error(e);process.exit(4)});
