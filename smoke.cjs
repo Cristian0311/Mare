@@ -1,6 +1,7 @@
 const puppeteer = require("puppeteer");
 
 const base = "https://mare-a8w2.onrender.com";
+// Production bootstrap recovery v2 deployed; run against fresh browser context.
 const routes = [
   "/",
   "/categorias",
