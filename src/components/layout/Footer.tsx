@@ -58,9 +58,6 @@ export function Footer() {
               <Link to="/coleccion/ofertas" className="text-gray-300 hover:text-white transition-colors">Ofertas</Link>
               <Link to="/coleccion/novedades" className="text-gray-300 hover:text-white transition-colors">Novedades</Link>
               <Link to="/coleccion/destacados" className="text-gray-300 hover:text-white transition-colors">Destacados</Link>
-              {config.wholesale.enabled && (
-                <Link to="/informacion/mayoristas" className="text-gray-300 hover:text-white transition-colors font-bold text-mare-turquoise">Mayoristas</Link>
-              )}
             </div>
             <div className="flex flex-col gap-3">
               <h4 className="font-bold text-lg mb-2 text-white">Información</h4>
