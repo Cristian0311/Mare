@@ -1,0 +1,72 @@
+import { Suspense } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { Layout } from './components/layout/Layout';
+import { AnimatedRoutes } from './AnimatedRoutes';
+import { ScrollToTop } from './components/ui/ScrollToTop';
+import { OfflineIndicator } from './components/ui/OfflineIndicator';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { CartProvider } from './contexts/CartContext';
+import { CurrencyProvider } from './contexts/CurrencyContext';
+import { FavoritesProvider } from './contexts/FavoritesContext';
+import { PromotionProvider } from './contexts/PromotionContext';
+import { WhatsAppProvider } from './contexts/WhatsAppContext';
+import { MaintenanceGuard } from './components/MaintenanceGuard';
+import { SWUpdateBanner } from './components/ui/SWUpdateBanner';
+import { retryLazy } from './utils/lazy';
+
+const AdminLogin = retryLazy(() => import('./admin/pages/AdminLogin').then(m => ({ default: m.AdminLogin })));
+const AdminLayout = retryLazy(() => import('./admin/layout/AdminLayout').then(m => ({ default: m.AdminLayout })));
+const AdminDashboard = retryLazy(() => import('./admin/pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const AdminAdvisors = retryLazy(() => import('./admin/pages/AdminAdvisors').then(m => ({ default: m.AdminAdvisors })));
+const AdminSettings = retryLazy(() => import('./admin/pages/AdminSettings').then(m => ({ default: m.AdminSettings })));
+const AdminWhatsApp = retryLazy(() => import('./admin/pages/AdminWhatsApp').then(m => ({ default: m.AdminWhatsApp })));
+const AdminDelivery = retryLazy(() => import('./admin/pages/AdminDelivery').then(m => ({ default: m.AdminDelivery })));
+const AdminContent = retryLazy(() => import('./admin/pages/AdminContent').then(m => ({ default: m.AdminContent })));
+
+export function AppRoutes() {
+  return (
+    <ErrorBoundary>
+      <CurrencyProvider>
+        <FavoritesProvider>
+          <PromotionProvider>
+            <CartProvider>
+              <WhatsAppProvider>
+                <Suspense fallback={<div className="min-h-screen bg-[#0B1320] flex items-center justify-center"><div className="w-12 h-12 border-4 border-[#14998E] border-t-transparent rounded-full animate-spin" /></div>}>
+                  <Routes>
+                    <Route path="/mare0311/login" element={<AdminLogin />} />
+                    <Route path="/mare0311" element={<AdminLayout />}>
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="asesores" element={<AdminAdvisors />} />
+                      <Route path="configuracion" element={<AdminSettings />} />
+                      <Route path="whatsapp" element={<AdminWhatsApp />} />
+                      <Route path="entregas" element={<AdminDelivery />} />
+                      <Route path="contenido" element={<AdminContent />} />
+                      <Route path="productos" element={<Navigate to="/" replace />} />
+                      <Route path="categorias" element={<Navigate to="/" replace />} />
+                      <Route path="inventario" element={<Navigate to="/" replace />} />
+                      <Route path="precios" element={<Navigate to="/" replace />} />
+                      <Route path="mayoristas" element={<Navigate to="/" replace />} />
+                      <Route path="pedidos" element={<Navigate to="/" replace />} />
+                      <Route path="clientes" element={<Navigate to="/" replace />} />
+                      <Route path="*" element={<Navigate to="/mare0311" replace />} />
+                    </Route>
+                    <Route path="/*" element={
+                      <MaintenanceGuard>
+                        <Layout>
+                          <Suspense fallback={null}><AnimatedRoutes /></Suspense>
+                          <ScrollToTop />
+                          <OfflineIndicator />
+                          <SWUpdateBanner />
+                        </Layout>
+                      </MaintenanceGuard>
+                    } />
+                  </Routes>
+                </Suspense>
+              </WhatsAppProvider>
+            </CartProvider>
+          </PromotionProvider>
+        </FavoritesProvider>
+      </CurrencyProvider>
+    </ErrorBoundary>
+  );
+}
