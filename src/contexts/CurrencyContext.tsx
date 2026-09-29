@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { CurrencyCode, currencyConfig } from '../config/currency';
+import { CurrencyCode, currencies, currencyConfig } from '../config/currency';
 import { configService } from '../services/config';
 
 interface CurrencyContextType {
@@ -15,7 +15,7 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
     const saved = localStorage.getItem('mare-currency');
-    return (saved as CurrencyCode) || currencyConfig.defaultCurrency;
+    return saved && saved in currencies ? (saved as CurrencyCode) : currencyConfig.defaultCurrency;
   });
   
   const [exchangeRate, setExchangeRate] = useState(configService.getConfigSync().currency.exchangeRateUSD);
