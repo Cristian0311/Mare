@@ -1,7 +1,7 @@
 name: Mare live smoke test
 
 on:
-  push:
+  pull_request:
     branches: [main]
 
 jobs:
@@ -11,39 +11,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - name: Live route smoke test
-        run: |
-          cat > /tmp/smoke.cjs <<'EOF'
-          const puppeteer = require('puppeteer');
-          const base = 'https://mare-a8w2.onrender.com';
-          const routes = ['/', '/categorias', '/buscar', '/coleccion/ofertas', '/coleccion/novedades', '/coleccion/destacados', '/mi-pedido', '/favoritos', '/informacion', '/informacion/como-comprar', '/informacion/entregas', '/informacion/faq', '/informacion/condiciones', '/informacion/contacto'];
-          (async () => {
-            const browser = await puppeteer.launch({headless:'new',args:['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage']});
-            const results=[];
-            try {
-              for (const route of routes) {
-                const page=await browser.newPage();
-                const errors=[];
-                const failed=[];
-                page.on('pageerror', e => errors.push(String(e)));
-                page.on('requestfailed', r => failed.push(r.url()+ ' :: '+(r.failure()?.errorText||'failed')));
-                const response=await page.goto(base+route+'?smoke='+Date.now(),{waitUntil:'networkidle2',timeout:45000});
-                await new Promise(r=>setTimeout(r,5000));
-                const body=(await page.evaluate(()=>document.body?.innerText||'')).slice(0,12000);
-                const cards=await page.$$('[id^="product-card-"]');
-                const fatal=/Algo salió mal en este módulo|Error al iniciar MARÉ|Error al iniciar este módulo/i.test(body);
-                results.push({route,status:response?.status()||0,title:await page.title(),cards:cards.length,fatal,errors,failed:failed.slice(0,10)});
-                await page.close();
-              }
-              const home=results.find(r=>r.route==='/');
-              const bad=results.filter(r=>r.fatal||r.errors.length||r.status>=400);
-              console.log(JSON.stringify({results},null,2));
-              if (!home || home.status>=400 || home.fatal || home.errors.length || home.cards===0) process.exit(2);
-              if (bad.length) process.exit(3);
-            } finally { await browser.close(); }
-          })().catch(e=>{console.error(e);process.exit(4)});
-          EOF
-          node /tmp/smoke.cjs
+        run: node smoke.cjs
