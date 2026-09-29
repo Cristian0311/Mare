@@ -88,8 +88,7 @@ export function AdminDashboard() {
       trendUp: true,
       icon: Eye,
       color: 'text-purple-600',
-      bg: 'bg-purple-50',
-      }
+      bg: 'bg-purple-50'
     }
   ];
 
