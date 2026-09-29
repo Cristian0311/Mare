@@ -8,7 +8,6 @@ import { analyticsService } from '../../services/analytics';
 import { safeFetch } from '../../lib/utils/promise';
 import { motion } from 'framer-motion';
 
-import { metricsService } from '../../services/metrics';
 
 export function AdminDashboard() {
   const { formatPrice } = useCurrency();
