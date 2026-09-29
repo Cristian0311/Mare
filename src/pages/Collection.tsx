@@ -45,12 +45,6 @@ const collectionMap: Record<string, { title: string, icon: React.ReactNode, desc
     description: 'Los productos favoritos y más buscados por nuestros clientes.',
     filter: p => p.masVendido
   },
-  mayorista: {
-    title: 'Venta Mayorista',
-    icon: <Package weight="light" className="w-full h-full" />,
-    description: 'Productos disponibles para compra al por mayor con precios especiales.',
-    filter: p => p.ventaMayorista?.habilitada
-  },
   todos: {
     title: 'Todos los Productos',
     icon: <ShoppingBag weight="light" className="w-full h-full" />,
@@ -138,7 +132,7 @@ export function Collection() {
   const availableBrands: string[] = [];
   const availableTags: string[] = [];
 
-  const isDarkTheme = type === 'ofertas' || type === 'mayorista';
+  const isDarkTheme = type === 'ofertas';
 
   if (!collectionInfo) {
     return (
