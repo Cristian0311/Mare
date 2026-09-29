@@ -72,6 +72,16 @@ export function ProductDetail() {
     };
   }, []);
 
+  // Hydrate the CRM catalog when a product detail is opened directly (empty cache / deep link).
+  useEffect(() => {
+    let active = true;
+    if (!slug || productService.getProductsSync().length > 0) return;
+    productService.hydrate().catch((error) => {
+      if (active) console.warn('Product detail hydration failed; waiting for retry/cache.', error);
+    });
+    return () => { active = false; };
+  }, [slug]);
+
   // Scroll to top on mount and slug change
   useEffect(() => {
     window.scrollTo(0, 0);
