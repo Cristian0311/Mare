@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { Package, TrendingUp, Users, DollarSign, ArrowUpRight, ArrowDownRight, Activity, ShoppingBag, Eye, RefreshCcw, ChevronRight } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useCurrency } from '../../contexts/CurrencyContext';
-import { orderService } from '../../services/orders';
 import { productService } from '../../services/products';
-import { analyticsService } from '../../services/analytics';
 import { safeFetch } from '../../lib/utils/promise';
 import { motion } from 'framer-motion';
 
@@ -91,18 +89,6 @@ export function AdminDashboard() {
       icon: Eye,
       color: 'text-purple-600',
       bg: 'bg-purple-50',
-      action: {
-        label: 'Reset',
-        onClick: async () => {
-          if (confirm('¿Deseas resetear el contador de visitas a 1?')) {
-            try {
-              await metricsService.resetGlobalVisits();
-              loadDashboardData();
-            } catch (e) {
-              console.error(e);
-            }
-          }
-        }
       }
     }
   ];
