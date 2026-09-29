@@ -7,12 +7,14 @@ import { ProductCarousel } from '../components/ui/ProductCarousel';
 import { Button } from '../components/ui/Button';
 import { SEO } from '../components/ui/SEO';
 import { getOffers, getNewProducts, getBestSellers, getFeaturedProducts, getAllPublicProducts } from '../utils/products';
+import { productService } from '../services/products';
 
 export function Home() {
   const [productsVersion, setProductsVersion] = useState(0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    void productService.hydrate();
     const handleProductsUpdate = () => setProductsVersion(v => v + 1);
     window.addEventListener('mare_products_updated', handleProductsUpdate);
     return () => window.removeEventListener('mare_products_updated', handleProductsUpdate);
