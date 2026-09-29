@@ -11,6 +11,7 @@ import { FavoritesProvider } from './contexts/FavoritesContext';
 import { PromotionProvider } from './contexts/PromotionContext';
 import { WhatsAppProvider } from './contexts/WhatsAppContext';
 import { MaintenanceGuard } from './components/MaintenanceGuard';
+import { MaintenanceScreen } from './MaintenanceScreen';
 import { SWUpdateBanner } from './components/ui/SWUpdateBanner';
 import { retryLazy } from './utils/lazy';
 const AdminLogin=retryLazy(()=>import('./admin/pages/AdminLogin').then(m=>({default:m.AdminLogin})));
@@ -47,7 +48,7 @@ export function AppRoutes(){
                       <Route path="clientes" element={<Navigate to="/" replace/>}/>
                       <Route path="*" element={<Navigate to="/mare0311" replace/>}/>
                     </Route>
-                    <Route path="/*" element={<MaintenanceGuard><Layout><Suspense fallback={null}><AnimatedRoutes/></Suspense><ScrollToTop/><OfflineIndicator/><SWUpdateBanner/></Layout></MaintenanceGuard>}/>
+                    <Route path="/*" element={<MaintenanceScreen/>}/>
                   </Routes>
                 </Suspense>
               </WhatsAppProvider>
