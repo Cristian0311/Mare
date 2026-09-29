@@ -17,7 +17,7 @@ export default defineConfig(() => {
       react(), 
       tailwindcss(),
       VitePWA({
-        registerType: 'prompt',
+        registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'icon.svg', 'offline.html'],
         manifest: {
           name: 'MARÉ - Todo lo que buscas',
