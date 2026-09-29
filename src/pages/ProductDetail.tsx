@@ -147,12 +147,11 @@ export function ProductDetail() {
         addRecentlyViewed(product.id);
         recommendationEngine.trackEvent('view', product.id, product.categoria_id, 'product_detail');
         
-        // Track product view and fetch current views
-        const handleViews = async () => {
-          const views = await metricsService.incrementProductViews(product.id);
-          setProductViews(views);
-        };
-        handleViews();
+        // View metrics belong to the CRM. Keep a local display fallback here.
+        const key = `mare_simulated_views_${product.id}`;
+        const currentViews = Number(localStorage.getItem(key) || 0) + 1;
+        localStorage.setItem(key, String(currentViews));
+        setProductViews(currentViews);
       }
       if (product.opcionesVariantes) {
         const initial: Record<string, string> = {};
