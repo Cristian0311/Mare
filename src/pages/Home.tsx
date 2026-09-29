@@ -8,13 +8,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, Truck, MessageCircle, ShoppingBag, Users, Package, MapPin } from 'lucide-react';
 import { Logo } from '../components/ui/Logo';
 import { configService } from '../services/config';
-import { bundleService } from '../services/bundleService';
-import { Bundle } from '../types/bundle';
-import { BundleCard } from '../components/ui/BundleCard';
 import { ProductRecommendations } from '../components/ProductRecommendations';
 
 // Simulamos carga de productos desde un servicio o config real
-import { getOffers as getPromotionalProducts, getNewProducts as getRecentProducts, getBestSellers, getFeaturedProducts, getWholesaleProducts, getAllPublicProducts } from '../utils/products';
+import { getOffers as getPromotionalProducts, getNewProducts as getRecentProducts, getBestSellers, getFeaturedProducts, getAllPublicProducts } from '../utils/products';
 
 import { SEO } from '../components/ui/SEO';
 
@@ -22,32 +19,14 @@ export function Home() {
   const navigate = useNavigate();
   const [config, setConfig] = useState(configService.getConfigSync());
   const [productsVersion, setProductsVersion] = useState(0);
-  const [activeBundles, setActiveBundles] = useState<Bundle[]>([]);
   const [globalVisits, setGlobalVisits] = useState<number | null>(null);
   
   useEffect(() => {
     window.scrollTo(0, 0);
-    const fetchBundles = async () => {
-      try {
-        const bundles = await bundleService.getActiveBundles();
-        setActiveBundles(bundles);
-      } catch (e) {
-        // Handle bundle fetch error silently
-      }
-    };
-    fetchBundles();
-
-    // Fetch and increment global visits
-    const handleVisits = async () => {
-      try {
-        await metricsService.incrementGlobalVisits();
-        const visits = await metricsService.getGlobalVisits();
-        setGlobalVisits(visits);
-      } catch (e) {
-        // Silent catch
-      }
-    };
-    handleVisits();
+    const key = 'mare_local_visits_fallback';
+    const visits = Number(localStorage.getItem(key) || 0) + 1;
+    localStorage.setItem(key, String(visits));
+    setGlobalVisits(visits);
   }, []);
 
   useEffect(() => {
@@ -121,7 +100,7 @@ export function Home() {
     return items.filter(p => p.ventaMayorista?.habilitada || !excludeIds.has(p.id));
   }, [ofertas, destacados, recienLlegados, productsVersion]);
 
-  const mayorista = useMemo(() => getWholesaleProducts(), [productsVersion]);
+
 
   // "Todos los productos" Prioriza productos que NO están en las secciones anteriores
   const todosLosProductos = useMemo(() => {
@@ -212,23 +191,7 @@ export function Home() {
         </section>
       )}
 
-      {/* 6. Venta por Volumen */}
-      {mayorista.length > 0 && (
-        <section>
-          <SectionTitle 
-            title="Venta por Volumen" 
-            subtitle="Precios especiales al por mayor."
-            action={
-              <Link to="/coleccion/mayorista" className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest hover:text-mare-green transition-colors">
-                Ver todos
-              </Link>
-            }
-          />
-          <ProductCarousel products={mayorista} />
-        </section>
-      )}
-
-      {/* 7. Nuevos / Recién Llegados */}
+      {/* 5. Nuevos / Recién Llegados */}
       {recienLlegados.length > 0 && (
         <section>
           <SectionTitle 
