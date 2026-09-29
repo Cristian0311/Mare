@@ -1,402 +1,79 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Hero } from '../components/ui/Hero';
 import { CategoryCarousel } from '../components/product/CategoryCarousel';
 import { SectionTitle } from '../components/ui/SectionTitle';
 import { ProductCarousel } from '../components/ui/ProductCarousel';
 import { Button } from '../components/ui/Button';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShieldCheck, Truck, MessageCircle, ShoppingBag, Users, Package, MapPin } from 'lucide-react';
-import { Logo } from '../components/ui/Logo';
-import { configService } from '../services/config';
-import { ProductRecommendations } from '../components/ProductRecommendations';
-
-// Simulamos carga de productos desde un servicio o config real
-import { getOffers as getPromotionalProducts, getNewProducts as getRecentProducts, getBestSellers, getFeaturedProducts, getAllPublicProducts } from '../utils/products';
-
 import { SEO } from '../components/ui/SEO';
+import { getOffers, getNewProducts, getBestSellers, getFeaturedProducts, getAllPublicProducts } from '../utils/products';
 
 export function Home() {
-  const navigate = useNavigate();
-  const [config, setConfig] = useState(configService.getConfigSync());
   const [productsVersion, setProductsVersion] = useState(0);
-  const [globalVisits, setGlobalVisits] = useState<number | null>(null);
-  
+
   useEffect(() => {
     window.scrollTo(0, 0);
-    const key = 'mare_local_visits_fallback';
-    const visits = Number(localStorage.getItem(key) || 0) + 1;
-    localStorage.setItem(key, String(visits));
-    setGlobalVisits(visits);
-  }, []);
-
-  useEffect(() => {
-    const handleConfigUpdate = () => {
-      setConfig(configService.getConfigSync());
-    };
-    const handleProductsUpdate = () => {
-      setProductsVersion(v => v + 1);
-    };
-    
-    window.addEventListener('mare_config_updated', handleConfigUpdate);
+    const handleProductsUpdate = () => setProductsVersion(v => v + 1);
     window.addEventListener('mare_products_updated', handleProductsUpdate);
-    
-    return () => {
-      window.removeEventListener('mare_config_updated', handleConfigUpdate);
-      window.removeEventListener('mare_products_updated', handleProductsUpdate);
-    };
+    return () => window.removeEventListener('mare_products_updated', handleProductsUpdate);
   }, []);
 
-  const ofertas = useMemo(() => getPromotionalProducts(), [productsVersion]);
-  
-  // Lógica de rotación para Destacados (Max 6, rotación horaria si hay más)
-  const destacados = useMemo(() => {
-    const all = getFeaturedProducts();
-    if (all.length <= 6) return all;
-    
-    // Rotación básica: cambia cada hora
-    const hour = new Date().getHours();
-    const totalBatches = Math.ceil(all.length / 6);
-    const batchIndex = hour % totalBatches;
-    const start = batchIndex * 6;
-    
-    // Si llegamos al final, volvemos a empezar o ajustamos
-    const result = all.slice(start, start + 6);
-    if (result.length < 6) {
-      return [...result, ...all.slice(0, 6 - result.length)];
-    }
-    return result;
-  }, [productsVersion]);
-  
-  // Lógica de deduplicación y rotación para Recién Llegados (Max 6)
-  const recienLlegados = useMemo(() => {
-    const items = getRecentProducts();
-    // Excluimos productos ya mostrados en Destacados (excepto si son mayoristas)
-    const excludeIds = new Set(destacados.map(p => p.id));
-    const filtered = items.filter(p => p.ventaMayorista?.habilitada || !excludeIds.has(p.id));
-    
-    if (filtered.length <= 6) return filtered;
-    
-    // Rotación para novedades (diferente offset para que no coincida con destacados)
-    const hour = new Date().getHours();
-    const totalBatches = Math.ceil(filtered.length / 6);
-    const batchIndex = (hour + 1) % totalBatches; // +1 para variar
-    const start = batchIndex * 6;
-    
-    const result = filtered.slice(start, start + 6);
-    if (result.length < 6) {
-      return [...result, ...filtered.slice(0, 6 - result.length)];
-    }
-    return result;
-  }, [destacados, productsVersion]);
-
-  const recomendados = useMemo(() => {
-    const items = getBestSellers();
-    const excludeIds = new Set([
-      ...ofertas.map(p => p.id),
-      ...destacados.map(p => p.id),
-      ...recienLlegados.map(p => p.id)
-    ]);
-    // Los mayoristas siempre pueden aparecer
-    return items.filter(p => p.ventaMayorista?.habilitada || !excludeIds.has(p.id));
-  }, [ofertas, destacados, recienLlegados, productsVersion]);
-
-
-
-  // "Todos los productos" Prioriza productos que NO están en las secciones anteriores
-  const todosLosProductos = useMemo(() => {
-    const all = getAllPublicProducts();
-    const featuredIds = new Set([
-      ...destacados.map(p => p.id),
-      ...recienLlegados.map(p => p.id)
-    ]);
-    
-    const notFeatured = all.filter(p => !featuredIds.has(p.id));
-    const featured = all.filter(p => featuredIds.has(p.id));
-    
-    return [...notFeatured, ...featured];
-  }, [destacados, recienLlegados, productsVersion]);
+  const destacados = useMemo(() => getFeaturedProducts(6), [productsVersion]);
+  const ofertas = useMemo(() => getOffers(6), [productsVersion]);
+  const novedades = useMemo(() => getNewProducts(6), [productsVersion]);
+  const masVendidos = useMemo(() => getBestSellers(6), [productsVersion]);
+  const todos = useMemo(() => getAllPublicProducts(), [productsVersion]);
 
   return (
     <div className="space-y-12 md:space-y-20 pb-12">
       <SEO />
-      {/* 1. Hero Principal */}
       <Hero />
+      <section><CategoryCarousel /></section>
 
-      {/* 2. Categorías (Carousel Circular) */}
-      <section>
-        <CategoryCarousel />
-      </section>
-
-      {/* 3. Destacados */}
       {destacados.length > 0 && (
         <section>
-          <SectionTitle 
-            title="Productos destacados" 
-            subtitle="Nuestra mejor selección y favoritos."
-            action={
-              <Link to="/coleccion/destacados">
-                <Button variant="outline" className="text-[7px] font-black text-mare-navy border-mare-navy/20 bg-white hover:bg-mare-navy hover:text-white transition-all tracking-[0.2em] uppercase px-1.5 h-5 rounded-md shadow-sm">
-                  VER TODO
-                </Button>
-              </Link>
-            }
+          <SectionTitle
+            title="Productos destacados"
+            subtitle="Nuestra selección del catálogo."
+            action={<Link to="/coleccion/destacados"><Button variant="outline">VER TODO</Button></Link>}
           />
           <ProductCarousel products={destacados} />
         </section>
       )}
 
-      {/* 4. Combos y Ofertas (Bundles) */}
-      {activeBundles.length > 0 && (
-        <section>
-          <SectionTitle 
-            title="Combos y Ofertas" 
-            subtitle="Los mejores productos juntos con descuento."
-            action={
-              <Link to="/combos">
-                <Button variant="outline" className="text-[7px] font-black text-mare-navy border-mare-navy/20 bg-white hover:bg-mare-navy hover:text-white transition-all tracking-[0.2em] uppercase px-1.5 h-5 rounded-md shadow-sm">
-                  VER TODO
-                </Button>
-              </Link>
-            }
-          />
-          <div className="px-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {activeBundles.slice(0, 3).map((bundle, idx) => (
-                <BundleCard 
-                  key={`home-bundle-${bundle.id}-${idx}`} 
-                  bundle={bundle} 
-                  onViewDetails={(b) => navigate(`/combos/${b.id}`)}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 5. Ofertas Especiales */}
       {ofertas.length > 0 && (
         <section>
-          <SectionTitle 
-            title="Ofertas Especiales" 
-            subtitle="Precios por tiempo limitado."
-            action={
-              <Link to="/coleccion/ofertas">
-                <Button variant="outline" className="text-[7px] font-black text-mare-navy border-mare-navy/20 bg-white hover:bg-mare-navy hover:text-white transition-all tracking-[0.2em] uppercase px-1.5 h-5 rounded-md shadow-sm">
-                  VER TODO
-                </Button>
-              </Link>
-            }
+          <SectionTitle
+            title="Ofertas especiales"
+            subtitle="Productos con precio promocional."
+            action={<Link to="/coleccion/ofertas"><Button variant="outline">VER TODO</Button></Link>}
           />
           <ProductCarousel products={ofertas} />
         </section>
       )}
 
-      {/* 5. Nuevos / Recién Llegados */}
-      {recienLlegados.length > 0 && (
+      {novedades.length > 0 && (
         <section>
-          <SectionTitle 
-            title="Recién llegados" 
-            subtitle="Descubre lo nuevo en la tienda."
-            action={
-              <Link to="/coleccion/novedades">
-                <Button variant="outline" className="text-[7px] font-black text-mare-navy border-mare-navy/20 bg-white hover:bg-mare-navy hover:text-white transition-all tracking-[0.2em] uppercase px-1.5 h-5 rounded-md shadow-sm">
-                  VER TODO
-                </Button>
-              </Link>
-            }
+          <SectionTitle
+            title="Recién llegados"
+            subtitle="Lo más reciente del catálogo."
+            action={<Link to="/coleccion/novedades"><Button variant="outline">VER TODO</Button></Link>}
           />
-          <ProductCarousel products={recienLlegados} />
+          <ProductCarousel products={novedades} />
         </section>
       )}
 
-      {/* 8. Todos los productos */}
-      {todosLosProductos.length > 0 && (
+      {masVendidos.length > 0 && (
         <section>
-          <SectionTitle 
-            title="Todos los productos" 
-            subtitle="Explora nuestro catálogo completo."
-            action={
-              <Link to="/coleccion/todos">
-                <Button variant="outline" className="text-[7px] font-black text-mare-navy border-mare-navy/20 bg-white hover:bg-mare-navy hover:text-white transition-all tracking-[0.2em] uppercase px-1.5 h-5 rounded-md shadow-sm">
-                  VER TODO
-                </Button>
-              </Link>
-            }
-          />
-          <ProductCarousel products={todosLosProductos} />
+          <SectionTitle title="Más vendidos" subtitle="Productos destacados por el catálogo." />
+          <ProductCarousel products={masVendidos} />
         </section>
       )}
 
-      {/* Sección Personalizada: Pensado Para Ti */}
-      <section className="px-4">
-        <ProductRecommendations type="for_you" title="Pensado para ti" />
-      </section>
-
-      {/* Visto Recientemente */}
-      <section className="px-4">
-        <ProductRecommendations type="recently_viewed" title="Visto Recientemente" />
-      </section>
-
-      {/* Sección MARÉ (Confianza compacta) */}
-      <section className="bg-gray-50 border border-gray-100 rounded-3xl p-6 md:p-10 text-center flex flex-col items-center">
-        <Logo className="mb-4 scale-110" />
-        <p className="text-sm md:text-base text-gray-500 font-medium max-w-xl leading-relaxed mb-8">
-          Encuentra productos de diferentes categorías en un solo lugar, con una experiencia sencilla y pensada para ti.
-        </p>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-3xl mb-8">
-          <div className="flex flex-col items-center p-4 bg-white rounded-2xl border border-gray-100">
-            <Truck className="h-5 w-5 text-mare-green mb-2" />
-            <span className="text-[10px] font-bold text-mare-navy tracking-wider uppercase">Entrega Rápida</span>
-          </div>
-          <div className="flex flex-col items-center p-4 bg-white rounded-2xl border border-gray-100">
-            <MessageCircle className="h-5 w-5 text-mare-green mb-2" />
-            <span className="text-[10px] font-bold text-mare-navy tracking-wider uppercase">Pedido WhatsApp</span>
-          </div>
-          <div className="flex flex-col items-center p-4 bg-white rounded-2xl border border-gray-100">
-            <span className="font-bold text-mare-green text-sm mb-1 leading-tight">{config.currency.base}</span>
-            <span className="text-[10px] font-bold text-mare-navy tracking-wider uppercase">Precios {config.currency.base}</span>
-          </div>
-          <div className="flex flex-col items-center p-4 bg-white rounded-2xl border border-gray-100">
-            <ShieldCheck className="h-5 w-5 text-mare-green mb-2" />
-            <span className="text-[10px] font-bold text-mare-navy tracking-wider uppercase">Garantía Total</span>
-          </div>
-        </div>
-
-        {/* Bloque de Ubicación Física */}
-        {config.delivery?.pickupLocations?.[0]?.address && (
-          <div className="w-full max-w-2xl relative overflow-hidden bg-white rounded-3xl border border-gray-100 p-5 md:p-6 shadow-sm mt-4 text-left">
-            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-mare-navy to-mare-navy/80 flex items-center justify-center text-mare-turquoise shrink-0 shadow-md">
-                <MapPin strokeWidth={2} className="w-6 h-6" />
-              </div>
-              
-              <div className="flex-1 text-center md:text-left">
-                <div className="inline-block px-2 py-1 bg-mare-gold/10 text-mare-gold text-[8px] font-black uppercase tracking-[0.2em] rounded-full mb-1.5">
-                  Nuestra Ubicación
-                </div>
-                <h3 className="text-lg font-black text-mare-navy tracking-tight mb-1">
-                  {config.delivery.pickupLocations[0].name}
-                </h3>
-                <p className="text-xs text-gray-500 font-medium mb-3 max-w-sm mx-auto md:mx-0">
-                  {config.delivery.pickupLocations[0].address}
-                </p>
-                
-                <div className="flex items-center justify-center md:justify-start gap-1.5 text-gray-400">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-                    {config.delivery.pickupLocations[0].schedule}
-                  </span>
-                </div>
-              </div>
-              
-              {config.delivery.pickupLocations[0].mapsUrl && (
-                <div className="flex shrink-0 w-full md:w-auto mt-2 md:mt-0">
-                  <a 
-                    href={config.delivery.pickupLocations[0].mapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full md:w-auto px-5 py-2.5 bg-mare-navy text-white font-black text-[9px] uppercase tracking-widest rounded-lg hover:bg-black transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5 h-fit"
-                  >
-                    Abrir Mapa
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* CTA Canal de WhatsApp (Compacto) */}
-        <a 
-          href="https://whatsapp.com/channel/0029VbDQEzM6hENkcQneXg35"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full max-w-2xl mt-3 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-mare-turquoise/20 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-mare-turquoise/50 transition-all group relative overflow-hidden"
-        >
-          <div className="absolute right-0 top-0 w-32 h-32 bg-mare-turquoise/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-mare-turquoise/10 transition-colors"></div>
-          
-          <div className="relative z-10 flex items-center gap-4 w-full sm:w-auto text-left">
-            <div className="w-10 h-10 bg-mare-navy text-mare-turquoise rounded-xl flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-              <MessageCircle className="w-5 h-5 fill-current" />
-            </div>
-            <div>
-              <h3 className="text-mare-navy font-black text-sm tracking-tight mb-0.5 group-hover:text-mare-turquoise transition-colors">
-                Canal Oficial de WhatsApp
-              </h3>
-              <p className="text-gray-500 text-xs font-medium">
-                Entérate primero de las nuevas ofertas
-              </p>
-            </div>
-          </div>
-          
-          <div className="relative z-10 shrink-0 w-full sm:w-auto mt-1 sm:mt-0">
-            <div className="flex items-center justify-center w-full sm:w-auto bg-mare-navy text-white px-5 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-widest group-hover:bg-mare-turquoise transition-colors shadow-sm">
-              Unirme
-            </div>
-          </div>
-        </a>
-      </section>
-
-      {/* 8. Recomendados */}
-      {recomendados.length > 0 && (
+      {todos.length > 0 && (
         <section>
-          <SectionTitle 
-            title="También te puede interesar" 
-            subtitle="Lo más popular."
-            action={
-              <Link to="/coleccion/recomendados">
-                <Button variant="outline" className="text-[7px] font-black text-mare-navy border-mare-navy/20 bg-white hover:bg-mare-navy hover:text-white transition-all tracking-[0.2em] uppercase px-1.5 h-5 rounded-md shadow-sm">
-                  VER TODO
-                </Button>
-              </Link>
-            }
-          />
-          <ProductCarousel products={recomendados} />
-        </section>
-      )}
-
-      {/* 10. CTA Final */}
-      <section className="bg-mare-navy text-white rounded-3xl p-5 md:p-8 text-center shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-mare-turquoise opacity-10 blur-[80px] rounded-full pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-mare-gold opacity-5 blur-[80px] rounded-full pointer-events-none"></div>
-        
-        <div className="relative z-10 flex flex-col items-center">
-          <div className="bg-white/5 p-3 rounded-xl backdrop-blur-sm border border-white/10 mb-4">
-            <ShoppingBag className="w-6 h-6 text-mare-turquoise" />
-          </div>
-          <h2 className="text-xl md:text-2xl font-black tracking-tight mb-2">
-            Compra fácil por WhatsApp
-          </h2>
-          <p className="text-xs md:text-sm text-gray-400 font-medium max-w-sm mx-auto mb-6 leading-relaxed">
-            Selecciona tus productos y envía tu pedido directamente. Nosotros nos encargamos del resto.
-          </p>
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/informacion/como-comprar')}
-            className="font-black text-[9px] md:text-[10px] tracking-[0.2em] px-6 h-10 md:h-11 rounded-xl border-white/10 text-white hover:bg-white hover:text-mare-navy transition-all"
-          >
-            VER GUÍA DE COMPRA
-          </Button>
-        </div>
-      </section>
-      
-      {/* 10. Contador Global de Visitas */}
-      {globalVisits !== null && (
-        <section className="px-4 flex justify-center">
-          <div className="inline-flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-2">
-            <div className="bg-mare-navy/5 p-1.5 rounded-lg">
-              <Users size={14} className="text-mare-navy" />
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                Comunidad MARÉ
-              </span>
-              <span className="text-xs font-black text-mare-navy tracking-tight">
-                {globalVisits.toLocaleString()} {globalVisits === 1 ? 'persona ha' : 'personas han'} visitado nuestra tienda
-              </span>
-            </div>
-          </div>
+          <SectionTitle title="Todo el catálogo" subtitle="Consulta todos los productos disponibles." />
+          <ProductCarousel products={todos.slice(0, 12)} />
         </section>
       )}
     </div>
