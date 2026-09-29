@@ -47,14 +47,6 @@ const infoCards = [
     color: 'bg-purple-50 text-purple-600'
   },
   {
-    id: 'mayoristas',
-    title: 'Mayoristas',
-    description: 'Información para compras al por mayor.',
-    icon: <Package className="h-6 w-6" />,
-    path: '/informacion/mayoristas',
-    color: 'bg-amber-50 text-amber-600'
-  },
-  {
     id: 'contacto',
     title: 'Contacto',
     description: 'Nuestros canales de atención al cliente.',

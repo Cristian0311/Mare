@@ -24,7 +24,6 @@ import { ProductRecommendations } from '../components/ProductRecommendations';
 
 import { addRecentlyViewed } from '../utils/recentlyViewed';
 import { recommendationEngine } from '../services/recommendationEngine';
-import { metricsService } from '../services/metrics';
 import { supabase } from '../lib/supabase/client';
 
 const Divider = () => <div className="w-full border-b border-dashed border-mare-navy/15 my-6"></div>;

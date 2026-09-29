@@ -1,8 +1,8 @@
 import { supabase, isConfigured } from '../lib/supabase/client';
 import { appConfig as defaultConfig } from '../config';
-import { AppConfig } from '../types';
 
 const CONFIG_STORAGE_KEY = 'mare_admin_config';
+const CRM_SETTINGS_ID = 'global';
 
 class ConfigService {
   private localConfig: typeof defaultConfig;
@@ -14,275 +14,101 @@ class ConfigService {
   private loadLocalConfig() {
     try {
       const saved = localStorage.getItem(CONFIG_STORAGE_KEY);
-      if (saved) {
-        return { ...defaultConfig, ...JSON.parse(saved) };
-      }
+      if (saved) return { ...defaultConfig, ...JSON.parse(saved) };
     } catch (e) {
-      console.error('Error loading config from localStorage', e);
+      console.error('Error loading local config:', e);
     }
     return defaultConfig;
   }
 
-  /**
-   * Obtiene la configuración general del sistema, sincronizando con DB
-   */
   async getConfig() {
-    if (!isConfigured) return this.localConfig;
-
     const config = { ...this.localConfig };
+    if (!isConfigured) return config;
 
     try {
-      // 1. Obtener tasa de cambio
-      const { data: currencyData } = await supabase
-        .from('currency_settings')
-        .select('exchange_rate')
-        .eq('is_active', true)
+      const { data } = await supabase
+        .from('settings')
+        .select('store_config,catalog_config,currencies')
+        .eq('id', CRM_SETTINGS_ID)
         .maybeSingle();
 
-      if (currencyData) {
-        config.currency.exchangeRateUSD = currencyData.exchange_rate;
+      if (data?.store_config) {
+        const store = data.store_config as any;
+        config.tiendaNombre = store.storeName || config.tiendaNombre;
+        config.eslogan = store.slogan || config.eslogan;
+        config.store = { ...config.store, name: store.storeName || config.store.name, slogan: store.slogan || config.store.slogan, contact: { ...config.store.contact, phone: store.phone || config.store.contact.phone } };
+        config.delivery = { ...config.delivery, pickupLocations: store.pickupLocations || config.delivery.pickupLocations };
+        config.whatsapp = { ...config.whatsapp, generalNumber: store.phone || config.whatsapp.generalNumber, mainNumber: store.phone || config.whatsapp.mainNumber };
       }
 
-      // 2. Obtener configuraciones de la tienda (WhatsApp, etc)
-      const { data: settingsData } = await supabase
-        .from('store_settings')
-        .select('key, value');
-
-      if (settingsData) {
-        settingsData.forEach(setting => {
-          if (setting.key === 'whatsapp') config.whatsapp = { ...config.whatsapp, ...setting.value };
-          if (setting.key === 'wholesale') config.wholesale = { ...config.wholesale, ...setting.value };
-          if (setting.key === 'reservation') config.reservation = { ...config.reservation, ...setting.value };
-          if (setting.key === 'delivery') config.delivery = { ...config.delivery, ...setting.value };
-          if (setting.key === 'general') {
-            config.tiendaNombre = setting.value.tiendaNombre || config.tiendaNombre;
-            config.eslogan = setting.value.eslogan || config.eslogan;
-          }
-          if (setting.key === 'features') {
-            config.features = { ...config.features, ...setting.value };
-          }
-        });
-      }
+      const currencies = (data?.currencies || []) as any[];
+      const usd = currencies.find(c => c.code === 'USD');
+      if (usd?.rateToBase) config.currency.exchangeRateUSD = Number(usd.rateToBase);
     } catch (e) {
-      console.error('Error syncing config with Supabase:', e);
+      // CRM schema/RLS differences must never break the public catalog.
+      console.warn('CRM settings sync unavailable; using local catalog configuration.');
     }
 
-    // Actualizar local para sincronía
     this.localConfig = config;
+    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
     return config;
   }
 
-  /**
-   * Obtiene la configuración sincrónica (para uso en contextos donde async no es ideal)
-   */
   getConfigSync() {
     return this.localConfig;
   }
 
-  /**
-   * Actualiza la configuración local y en DB
-   */
   async updateConfig(newConfig: Partial<typeof defaultConfig>) {
-    // Deep merge current local config with new updates
-    const updatedConfig = { ...this.localConfig };
-    
-    // Manual deep merge for known nested objects to avoid overwriting them entirely
-    if (newConfig.features) {
-      updatedConfig.features = { ...updatedConfig.features, ...newConfig.features };
-    }
-    if (newConfig.whatsapp) {
-      updatedConfig.whatsapp = { ...updatedConfig.whatsapp, ...newConfig.whatsapp };
-    }
-    if (newConfig.wholesale) {
-      updatedConfig.wholesale = { ...updatedConfig.wholesale, ...newConfig.wholesale };
-    }
-    if (newConfig.reservation) {
-      updatedConfig.reservation = { ...updatedConfig.reservation, ...newConfig.reservation };
-    }
-    if (newConfig.delivery) {
-      updatedConfig.delivery = { ...updatedConfig.delivery, ...newConfig.delivery };
-    }
-    if (newConfig.currency) {
-      updatedConfig.currency = { ...updatedConfig.currency, ...newConfig.currency };
-    }
-    if (newConfig.store) {
-      updatedConfig.store = { ...updatedConfig.store, ...newConfig.store };
-    }
-    
-    // Apply top-level properties
-    Object.assign(updatedConfig, {
-      ...newConfig,
-      features: updatedConfig.features,
-      whatsapp: updatedConfig.whatsapp,
-      wholesale: updatedConfig.wholesale,
-      reservation: updatedConfig.reservation,
-      delivery: updatedConfig.delivery,
-      currency: updatedConfig.currency,
-      store: updatedConfig.store
-    });
+    const updatedConfig = { ...this.localConfig, ...newConfig };
+    if (newConfig.features) updatedConfig.features = { ...this.localConfig.features, ...newConfig.features };
+    if (newConfig.whatsapp) updatedConfig.whatsapp = { ...this.localConfig.whatsapp, ...newConfig.whatsapp };
+    if (newConfig.delivery) updatedConfig.delivery = { ...this.localConfig.delivery, ...newConfig.delivery };
+    if (newConfig.currency) updatedConfig.currency = { ...this.localConfig.currency, ...newConfig.currency };
+    if (newConfig.store) updatedConfig.store = { ...this.localConfig.store, ...newConfig.store };
 
     this.localConfig = updatedConfig;
-    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(this.localConfig));
-
-    if (isConfigured) {
-      try {
-        // Save merged parts to store_settings
-        if (newConfig.whatsapp || updatedConfig.whatsapp) {
-          await this.saveSetting('whatsapp', updatedConfig.whatsapp);
-        }
-        if (newConfig.wholesale || updatedConfig.wholesale) {
-          await this.saveSetting('wholesale', updatedConfig.wholesale);
-        }
-        if (newConfig.reservation || updatedConfig.reservation) {
-          await this.saveSetting('reservation', updatedConfig.reservation);
-        }
-        if (newConfig.delivery || updatedConfig.delivery) {
-          await this.saveSetting('delivery', updatedConfig.delivery);
-        }
-        if (newConfig.tiendaNombre || newConfig.eslogan) {
-          await this.saveSetting('general', {
-            tiendaNombre: updatedConfig.tiendaNombre,
-            eslogan: updatedConfig.eslogan
-          });
-        }
-        if (newConfig.features || updatedConfig.features) {
-          await this.saveSetting('features', updatedConfig.features);
-        }
-        if (newConfig.store || updatedConfig.store) {
-          await this.saveSetting('store', updatedConfig.store);
-        }
-      } catch (e) {
-        console.error('Error saving config to Supabase:', e);
-      }
-    }
-
+    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(updatedConfig));
     window.dispatchEvent(new Event('mare_config_updated'));
-    return this.localConfig;
+    return updatedConfig;
   }
 
-  /**
-   * Obtiene la configuración de SEO
-   */
   async getSeoSettings() {
-    if (!isConfigured) return null;
-
-    const { data, error } = await supabase
-      .from('seo_settings')
-      .select('*')
-      .eq('is_active', true)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error fetching SEO settings:', error);
-      return null;
-    }
-
-    return data;
+    const seo = (this.localConfig as any).seo;
+    return seo ? {
+      title: seo.title || seo.defaultTitle || '',
+      description: seo.description || seo.defaultDescription || '',
+      keywords: seo.keywords || ''
+    } : null;
   }
 
-  /**
-   * Actualiza la configuración de SEO
-   */
   async updateSeoSettings(settings: any) {
-    if (!isConfigured) return;
-
-    const { data: existing } = await supabase
-      .from('seo_settings')
-      .select('id')
-      .eq('is_active', true)
-      .maybeSingle();
-
-    if (existing) {
-      const { error } = await supabase
-        .from('seo_settings')
-        .update({ ...settings, updated_at: new Date().toISOString() })
-        .eq('id', existing.id);
-      
-      if (error) throw error;
-    } else {
-      const { error } = await supabase
-        .from('seo_settings')
-        .insert({ ...settings, is_active: true });
-      
-      if (error) throw error;
-    }
+    this.localConfig = {
+      ...this.localConfig,
+      seo: { ...(this.localConfig as any).seo, ...settings }
+    } as typeof defaultConfig;
+    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(this.localConfig));
+    window.dispatchEvent(new Event('mare_config_updated'));
   }
 
-  private async saveSetting(key: string, value: any) {
-    const { error } = await supabase
-      .from('store_settings')
-      .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-    if (error) throw error;
+  async getStoreSettings() {
+    // Mare no mantiene una tabla de configuración propia.
+    // El contenido editable permanece local hasta que exista un endpoint CRM explícito.
+    return {};
   }
 
-  /**
-   * Actualiza la tasa de USD en Supabase
-   */
+  async updateStoreSettings(settings: Record<string, any>) {
+    try {
+      const existing = JSON.parse(localStorage.getItem('mare_content_settings') || '{}');
+      localStorage.setItem('mare_content_settings', JSON.stringify({ ...existing, ...settings }));
+    } catch {}
+    window.dispatchEvent(new Event('mare_config_updated'));
+  }
+
   async updateExchangeRate(newRate: number): Promise<void> {
-    if (newRate <= 0) throw new Error("La tasa debe ser mayor que 0");
-
-    if (isConfigured) {
-      // Primero verificamos si existe un registro activo
-      const { data: existing } = await supabase
-        .from('currency_settings')
-        .select('id')
-        .eq('is_active', true)
-        .maybeSingle();
-
-      if (existing) {
-        const { error } = await supabase
-          .from('currency_settings')
-          .update({ exchange_rate: newRate, updated_at: new Date().toISOString() })
-          .eq('id', existing.id);
-        
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('currency_settings')
-          .insert({
-            base_currency: 'CUP',
-            target_currency: 'USD',
-            exchange_rate: newRate,
-            is_active: true
-          });
-        
-        if (error) throw error;
-      }
-    }
-
-    // Actualizamos en local temporalmente para sincronía
+    if (newRate <= 0) throw new Error('La tasa debe ser mayor que 0');
     this.localConfig.currency.exchangeRateUSD = newRate;
     localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(this.localConfig));
     window.dispatchEvent(new Event('mare_config_updated'));
-  }
-
-  /**
-   * Obtiene configuraciones genéricas de la tienda
-   */
-  async getStoreSettings() {
-    if (!isConfigured) return {};
-    
-    const { data, error } = await supabase
-      .from('store_settings')
-      .select('key, value');
-      
-    if (error) throw error;
-    
-    return (data || []).reduce((acc: any, curr) => {
-      acc[curr.key] = curr.value;
-      return acc;
-    }, {});
-  }
-
-  /**
-   * Actualiza configuraciones genéricas de la tienda
-   */
-  async updateStoreSettings(settings: Record<string, any>) {
-    if (!isConfigured) return;
-    
-    for (const [key, value] of Object.entries(settings)) {
-      await this.saveSetting(key, value);
-    }
   }
 }
 

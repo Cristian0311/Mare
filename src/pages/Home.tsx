@@ -12,7 +12,6 @@ import { bundleService } from '../services/bundleService';
 import { Bundle } from '../types/bundle';
 import { BundleCard } from '../components/ui/BundleCard';
 import { ProductRecommendations } from '../components/ProductRecommendations';
-import { metricsService } from '../services/metrics';
 
 // Simulamos carga de productos desde un servicio o config real
 import { getOffers as getPromotionalProducts, getNewProducts as getRecentProducts, getBestSellers, getFeaturedProducts, getWholesaleProducts, getAllPublicProducts } from '../utils/products';
