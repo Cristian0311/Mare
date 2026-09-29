@@ -23,18 +23,22 @@ const base = "https://mare-a8w2.onrender.com";
     const desktop=await visit("/",{width:1440,height:1000});
     if ((await desktop.$$('[id^="product-card-"]')).length===0) throw new Error("La página principal no muestra productos en escritorio.");
 
-    const productHref=await desktop.$eval('a[href^="/producto/"]',a=>a.getAttribute("href"));
-    if(!productHref) throw new Error("No hay enlace de detalle de producto en la página principal.");
+    const productCard=await desktop.$('[id^="product-card-"]');
+    if(!productCard) throw new Error("No hay tarjetas de producto en la página principal.");
+    await productCard.click();
+    await new Promise(r=>setTimeout(r,1000));
+    const productPath=new URL(desktop.url()).pathname;
+    if(!productPath.startsWith('/producto/')) throw new Error("La tarjeta de producto no abre el detalle.");
     const addButton=await desktop.$('[id^="btn-add-"]:not([disabled])');
     if(addButton){
       await addButton.click();
       await new Promise(r=>setTimeout(r,500));
     }
 
-    await desktop.goto(base+productHref+"?smoke="+Date.now(),{waitUntil:"domcontentloaded",timeout:30000});
+    await desktop.goto(base+productPath+"?smoke="+Date.now(),{waitUntil:"domcontentloaded",timeout:30000});
     await new Promise(r=>setTimeout(r,8000));
     const detailBody=await desktop.evaluate(()=>document.body?.innerText||"");
-    checks.push({route:productHref,viewport:"desktop-detail",status:200,title:await desktop.title(),cards:0,fatal:/Algo salió mal en este módulo|Error al iniciar MARÉ|Error al iniciar este módulo/i.test(detailBody),errors:[],consoleErrors:[]});
+    checks.push({route:productPath,viewport:"desktop-detail",status:200,title:await desktop.title(),cards:0,fatal:/Algo salió mal en este módulo|Error al iniciar MARÉ|Error al iniciar este módulo/i.test(detailBody),errors:[],consoleErrors:[]});
     await desktop.close();
 
     const mobile=await visit("/",{width:390,height:844});
