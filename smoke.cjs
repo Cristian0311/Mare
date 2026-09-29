@@ -40,11 +40,11 @@ const routes = [
       page.on("requestfailed", req => requestFailures.push(req.url() + " :: " + (req.failure()?.errorText || "failed")));
 
       const response = await page.goto(base + route + "?smoke=" + Date.now(), {
-        waitUntil: "networkidle2",
-        timeout: 60000
+        waitUntil: "domcontentloaded",
+        timeout: 30000
       });
 
-      await new Promise(resolve => setTimeout(resolve, 7000));
+      await new Promise(resolve => setTimeout(resolve, 10000));
 
       const body = await page.evaluate(() => document.body?.innerText || "");
       const cards = await page.$$('[id^="product-card-"]');
